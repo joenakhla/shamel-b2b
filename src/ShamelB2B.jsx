@@ -290,9 +290,9 @@ export default function ShamelB2B() {
           <div style={{ fontSize: 48, marginBottom: 16 }}>🔐</div>
           <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24 }}>{t.adminTitle}</h2>
           <input type="password" placeholder={t.adminPassword} value={adminPass} onChange={e => setAdminPass(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && (adminPass === "shamel2026" ? setAdminAuth(true) : alert("Wrong password"))}
+            onKeyDown={e => e.key === "Enter" && (adminPass === "shamel2026@joe" ? setAdminAuth(true) : alert("Wrong password"))}
             style={{ ...sty.input, direction: "ltr", textAlign: "left", marginBottom: 16 }} />
-          <button onClick={() => adminPass === "shamel2026" ? setAdminAuth(true) : alert("Wrong password")} style={{ ...sty.btn, width: "100%" }}>{t.adminLogin}</button>
+          <button onClick={() => adminPass === "shamel2026@joe" ? setAdminAuth(true) : alert("Wrong password")} style={{ ...sty.btn, width: "100%" }}>{t.adminLogin}</button>
           <p style={{ marginTop: 16, fontSize: 13, color: "#9ca3af", cursor: "pointer" }} onClick={() => setPage("landing")}>{t.adminBack}</p>
         </div>
       </div>
