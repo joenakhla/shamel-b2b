@@ -46,11 +46,11 @@ const T = {
     caseSub: "Real results from real companies using Shamel for their teams.",
     caseSaves: "Saves",
     cs1q: "Shamel helped us provide healthcare benefits to our entire team at a fraction of what traditional insurance would cost. Our retention improved within the first quarter.",
-    cs1p: "HR Director", cs1s: "170 employees enrolled", cs1ind: "Real Estate",
+    cs1p: "Ahmed Hassan, HR Director", cs1s: "170 employees enrolled", cs1ind: "Real Estate",
     cs2q: "As a growing agency, we needed an affordable health benefit. Shamel gave us enterprise-level healthcare access at startup-friendly pricing.",
-    cs2p: "Founder", cs2s: "30 employees enrolled", cs2ind: "Digital Marketing",
+    cs2p: "Sarah Khaled, Founder", cs2s: "30 employees enrolled", cs2ind: "Digital Marketing",
     cs3q: "Our drivers and warehouse staff finally have access to quality healthcare. The network coverage across Egypt means they can use Shamel wherever they are.",
-    cs3p: "Operations Manager", cs3s: "89 employees enrolled", cs3ind: "Logistics",
+    cs3p: "Mohamed Fathy, Operations Manager", cs3s: "89 employees enrolled", cs3ind: "Logistics",
     // Form
     formTag: "Get Started", formTitle: "Request your free quote",
     formSub: "Fill in your details and our B2B team will contact you within 24 hours with a customized proposal.",
@@ -290,9 +290,9 @@ export default function ShamelB2B() {
           <div style={{ fontSize: 48, marginBottom: 16 }}>🔐</div>
           <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24 }}>{t.adminTitle}</h2>
           <input type="password" placeholder={t.adminPassword} value={adminPass} onChange={e => setAdminPass(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && (adminPass === "shamel2026@joe" ? setAdminAuth(true) : alert("Wrong password"))}
+            onKeyDown={e => e.key === "Enter" && (adminPass === "Shamel@2026" ? setAdminAuth(true) : alert("Wrong password"))}
             style={{ ...sty.input, direction: "ltr", textAlign: "left", marginBottom: 16 }} />
-          <button onClick={() => adminPass === "shamel2026@joe" ? setAdminAuth(true) : alert("Wrong password")} style={{ ...sty.btn, width: "100%" }}>{t.adminLogin}</button>
+          <button onClick={() => adminPass === "Shamel@2026" ? setAdminAuth(true) : alert("Wrong password")} style={{ ...sty.btn, width: "100%" }}>{t.adminLogin}</button>
           <p style={{ marginTop: 16, fontSize: 13, color: "#9ca3af", cursor: "pointer" }} onClick={() => setPage("landing")}>{t.adminBack}</p>
         </div>
       </div>
