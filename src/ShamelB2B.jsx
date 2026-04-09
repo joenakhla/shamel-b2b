@@ -259,6 +259,21 @@ export default function ShamelB2B() {
       employees: formData.employees, status: "new", date: new Date().toISOString().split("T")[0],
       source: "landing", notes: `Contact: ${formData.name}. ${formData.message}`
     }, ...prev]);
+
+    fetch("https://formsubmit.co/ajax/youssef.medhat@vezeeta.com", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({
+        _subject: `New Shamel B2B Lead — ${formData.company}`,
+        Name: formData.name,
+        Company: formData.company,
+        Email: formData.email,
+        Phone: formData.phone,
+        Employees: formData.employees,
+        Message: formData.message || "N/A",
+      }),
+    }).catch(() => {});
+
     setFormSubmitted(true);
     setFormData({ name: "", company: "", email: "", phone: "", employees: "", message: "" });
     setTimeout(() => setFormSubmitted(false), 5000);
@@ -566,9 +581,9 @@ export default function ShamelB2B() {
               style={{ width: "100%", marginBottom: 8, accentColor: "#3B82F6", direction: "ltr" }} />
             <div style={{ fontSize: 48, fontWeight: 900, color: "#fff", marginBottom: 32 }}>{roiEmployees} <span style={{ fontSize: 18, color: "#64748b" }}>{t.roiEmployees}</span></div>
             <div className="grid-3" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
-              {[{ label: t.roiShamel, value: `EGP ${(roiEmployees * 550).toLocaleString()}`, sub: `EGP 550${t.roiPerPerson}`, color: "#3B82F6" },
+              {[{ label: t.roiShamel, value: `EGP ${(roiEmployees * 800).toLocaleString()}`, sub: `EGP 800${t.roiPerPerson}`, color: "#3B82F6" },
                 { label: t.roiInsurance, value: `EGP ${(roiEmployees * 4500).toLocaleString()}`, sub: `EGP 4,500${t.roiPerPerson}`, color: "#EF4444" },
-                { label: t.roiSavings, value: `EGP ${(roiEmployees * 3950).toLocaleString()}`, sub: `${Math.round((3950/4500)*100)}% ${t.roiLess}`, color: "#10B981" },
+                { label: t.roiSavings, value: `EGP ${(roiEmployees * 3700).toLocaleString()}`, sub: `${Math.round((3700/4500)*100)}% ${t.roiLess}`, color: "#10B981" },
               ].map((r, i) => (
                 <div key={i} style={{ background: "rgba(255,255,255,0.05)", borderRadius: 14, padding: 24, border: "1px solid rgba(255,255,255,0.08)" }}>
                   <div style={{ fontSize: 13, color: "#64748b", marginBottom: 8 }}>{r.label}</div>
