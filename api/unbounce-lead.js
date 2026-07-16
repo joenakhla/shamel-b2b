@@ -79,7 +79,9 @@ async function biginAPI(method, path, token, body) {
   };
   if (body) opts.body = JSON.stringify(body);
   const res = await fetch(`https://www.zohoapis.com/bigin/v1/${path}`, opts);
-  return res.json();
+  const text = await res.text();
+  if (!text) return { data: null };
+  try { return JSON.parse(text); } catch { return { data: null, raw: text }; }
 }
 
 // ─── HELPER: Search or create Account ───
