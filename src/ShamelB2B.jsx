@@ -569,6 +569,95 @@ export default function ShamelB2B() {
         <p style={{ textAlign: "center", color: "#9ca3af", marginTop: 24, fontSize: 14 }}>{t.netMore}</p>
       </section>
 
+
+      {/* ===== SOCIAL PROOF ===== */}
+<section style={{ background: "#f8fafc", padding: "48px 24px" }}>
+  <div style={{ maxWidth: 900, margin: "0 auto", textAlign: "center" }}>
+    <p style={{
+      fontSize: 14,
+      fontWeight: 700,
+      color: "#0D9488",
+      letterSpacing: "0.08em",
+      marginBottom: 8,
+      textTransform: "uppercase",
+    }}>
+      {isRtl ? "موثوق من شركات في كل المجالات" : "TRUSTED ACROSS INDUSTRIES"}
+    </p>
+    <h2 style={{
+      fontSize: 28,
+      fontWeight: 800,
+      color: "#0f172a",
+      marginBottom: 32,
+      lineHeight: 1.3,
+    }}>
+      {isRtl
+        ? "أكتر من ١٠٠ شركة بتستخدم شامل لرعاية موظفيها"
+        : "100+ companies use Shamel to care for their teams"}
+    </h2>
+
+    <div style={{
+      display: "flex",
+      flexWrap: "wrap",
+      justifyContent: "center",
+      gap: 16,
+      marginBottom: 32,
+    }}>
+      {[
+        { icon: "🏢", label: isRtl ? "شركات تكنولوجيا" : "Tech Companies" },
+        { icon: "🍽️", label: isRtl ? "مطاعم وكافيهات" : "F&B Chains" },
+        { icon: "🚛", label: isRtl ? "لوجستيات وتوصيل" : "Logistics" },
+        { icon: "🏪", label: isRtl ? "تجارة وتجزئة" : "Retail" },
+        { icon: "📞", label: isRtl ? "خدمات تعهيد" : "Outsourcing / BPO" },
+        { icon: "⚖️", label: isRtl ? "خدمات مهنية" : "Professional Services" },
+      ].map((cat, i) => (
+        <div key={i} style={{
+          background: "#fff",
+          borderRadius: 12,
+          padding: "14px 20px",
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+          border: "1px solid #e2e8f0",
+        }}>
+          <span style={{ fontSize: 20 }}>{cat.icon}</span>
+          <span style={{ fontSize: 14, fontWeight: 600, color: "#334155" }}>{cat.label}</span>
+        </div>
+      ))}
+    </div>
+
+    <div style={{
+      display: "flex",
+      justifyContent: "center",
+      gap: 48,
+      flexWrap: "wrap",
+    }}>
+      {[
+        { num: "١٠٠+", label: isRtl ? "شركة مشتركة" : "Companies" },
+        { num: "٦,٩٠٠+", label: isRtl ? "موظف مستفيد" : "Employees covered" },
+        { num: "٤٨ ساعة", label: isRtl ? "تفعيل الخدمة" : "Activation time" },
+      ].map((s, i) => (
+        <div key={i} style={{ textAlign: "center" }}>
+          <div style={{ fontSize: 36, fontWeight: 800, color: "#0D9488", lineHeight: 1 }}>{s.num}</div>
+          <div style={{ fontSize: 13, color: "#64748b", marginTop: 4 }}>{s.label}</div>
+        </div>
+      ))}
+    </div>
+
+    <p style={{
+      marginTop: 24,
+      fontSize: 13,
+      color: "#94a3b8",
+      fontStyle: "italic",
+    }}>
+      {isRtl
+        ? "شامل مش تأمين طبي — ده اشتراك رعاية صحية بتكلفة أقل بكتير"
+        : "Shamel is not insurance — it's a healthcare subscription at a fraction of the cost"}
+    </p>
+  </div>
+</section>
+
+      
       {/* ===== ROI CALCULATOR ===== */}
       <section id="roi" style={{ background: "linear-gradient(135deg, #0a1628, #1a3a5c)", padding: "80px 24px" }}>
         <div style={{ maxWidth: 800, margin: "0 auto", textAlign: "center" }}>
