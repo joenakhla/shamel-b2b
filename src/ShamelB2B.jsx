@@ -578,8 +578,8 @@ export default function ShamelB2B() {
       </section>
 
 
-      {/* ===== SOCIAL PROOF ===== */}
-<section style={{ background: "#f8fafc", padding: "48px 24px" }}>
+    {/* ===== SOCIAL PROOF ===== */}
+<section style={{ background: "#f8fafc", padding: "48px 24px", direction: isRtl ? "rtl" : "ltr" }}>
   <div style={{ maxWidth: 900, margin: "0 auto", textAlign: "center" }}>
     <p style={{
       fontSize: 14,
@@ -611,12 +611,12 @@ export default function ShamelB2B() {
       marginBottom: 32,
     }}>
       {[
-        { icon: "🏢", label: isRtl ? "شركات تكنولوجيا" : "Tech Companies" },
-        { icon: "🍽️", label: isRtl ? "مطاعم وكافيهات" : "F&B Chains" },
-        { icon: "🚛", label: isRtl ? "لوجستيات وتوصيل" : "Logistics" },
-        { icon: "🏪", label: isRtl ? "تجارة وتجزئة" : "Retail" },
-        { icon: "📞", label: isRtl ? "خدمات تعهيد" : "Outsourcing / BPO" },
-        { icon: "⚖️", label: isRtl ? "خدمات مهنية" : "Professional Services" },
+        { icon: "🏢", ar: "شركات تكنولوجيا", en: "Tech Companies" },
+        { icon: "🍽️", ar: "مطاعم وكافيهات", en: "F&B Chains" },
+        { icon: "🚛", ar: "لوجستيات وتوصيل", en: "Logistics" },
+        { icon: "🏪", ar: "تجارة وتجزئة", en: "Retail" },
+        { icon: "📞", ar: "خدمات تعهيد", en: "Outsourcing / BPO" },
+        { icon: "⚖️", ar: "خدمات مهنية", en: "Professional Services" },
       ].map((cat, i) => (
         <div key={i} style={{
           background: "#fff",
@@ -629,7 +629,7 @@ export default function ShamelB2B() {
           border: "1px solid #e2e8f0",
         }}>
           <span style={{ fontSize: 20 }}>{cat.icon}</span>
-          <span style={{ fontSize: 14, fontWeight: 600, color: "#334155" }}>{cat.label}</span>
+          <span style={{ fontSize: 14, fontWeight: 600, color: "#334155" }}>{isRtl ? cat.ar : cat.en}</span>
         </div>
       ))}
     </div>
@@ -641,13 +641,13 @@ export default function ShamelB2B() {
       flexWrap: "wrap",
     }}>
       {[
-        { num: "١٠٠+", label: isRtl ? "شركة مشتركة" : "Companies" },
-        { num: "٦,٩٠٠+", label: isRtl ? "موظف مستفيد" : "Employees covered" },
-        { num: "٤٨ ساعة", label: isRtl ? "تفعيل الخدمة" : "Activation time" },
+        { numAr: "١٠٠+", numEn: "100+", ar: "شركة مشتركة", en: "Companies" },
+        { numAr: "٦,٩٠٠+", numEn: "6,900+", ar: "موظف مستفيد", en: "Employees covered" },
+        { numAr: "٤٨ ساعة", numEn: "48 hrs", ar: "تفعيل الخدمة", en: "Activation time" },
       ].map((s, i) => (
         <div key={i} style={{ textAlign: "center" }}>
-          <div style={{ fontSize: 36, fontWeight: 800, color: "#0D9488", lineHeight: 1 }}>{s.num}</div>
-          <div style={{ fontSize: 13, color: "#64748b", marginTop: 4 }}>{s.label}</div>
+          <div style={{ fontSize: 36, fontWeight: 800, color: "#0D9488", lineHeight: 1 }}>{isRtl ? s.numAr : s.numEn}</div>
+          <div style={{ fontSize: 13, color: "#64748b", marginTop: 4 }}>{isRtl ? s.ar : s.en}</div>
         </div>
       ))}
     </div>
