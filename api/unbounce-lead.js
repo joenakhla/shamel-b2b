@@ -205,7 +205,6 @@ export default async function handler(req, res) {
       dealResult = await biginAPI("POST", "Deals", token, {
         data: [{
           Deal_Name:    `${company} — Unbounce Lead`,
-          Layout:       "Sales Pipeline",
           Stage:        "Lead",
           Contact_Name: { id: contactId },
         }],
