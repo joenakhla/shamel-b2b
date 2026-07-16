@@ -467,7 +467,15 @@ export default function ShamelB2B() {
             {t.langFlag} {t.langSwitch}
           </button>
           <button onClick={() => scrollTo("contact")} style={{ ...sty.btn, padding: "8px 20px", fontSize: 13 }}>{t.navCta}</button>
-          <span onClick={() => setPage("admin")} style={{ fontSize: 11, color: "#d1d5db", cursor: "pointer", marginInlineStart: 4 }}>⚙️</span>
+          <span
+  onClick={() => {
+    const pwd = prompt("Enter admin password:");
+    if (pwd === "shamel2026") setPage("admin");
+  }}
+  style={{ cursor: "default", color: "#1e293b" }}
+>
+  © 2026
+</span>
         </div>
       </nav>
 
