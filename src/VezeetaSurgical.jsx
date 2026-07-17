@@ -450,10 +450,10 @@ export default function VezeetaSurgical() {
       {/* ── LEAD FORM ─────────────────────────────────────────────────────── */}
       <section style={{ background:C.white, padding:"80px 24px" }} ref={formRef}>
         <div style={{ maxWidth:1100, margin:"0 auto" }}>
-          <div className="form-cols" style={{ display:"flex", gap:64, alignItems:"flex-start" }}>
+          <div className="form-cols" style={{ display:"flex", gap:48, alignItems:"flex-start" }}>
 
             {/* Left: value prop */}
-            <div style={{ flex:1, minWidth:0 }}>
+            <div style={{ flex:"0 0 340px", minWidth:0 }}>
               <div style={{ display:"inline-block", padding:"4px 14px", borderRadius:100, background:C.primaryLight, color:C.primary, fontSize:12, fontWeight:700, marginBottom:16 }}>احجز الآن</div>
               <h2 style={{ fontSize:32, fontWeight:900, color:C.charcoal, marginBottom:24, lineHeight:1.4 }}>خطوتك الأولى تبدأ هنا</h2>
               <div style={{ display:"flex", flexDirection:"column", gap:16, marginBottom:32 }}>
@@ -480,7 +480,7 @@ export default function VezeetaSurgical() {
             </div>
 
             {/* Right: form */}
-            <div style={{ flex:1, minWidth:0 }}>
+            <div style={{ flex:"1 1 520px", minWidth:0 }}>
               {formSubmitted ? (
                 <div style={{ background:"#F0FDF4", borderRadius:20, padding:48, border:"1px solid #BBF7D0", textAlign:"center", boxShadow:"0 4px 24px rgba(0,0,0,0.06)" }}>
                   <div style={{ fontSize:56, marginBottom:16 }}>✅</div>
@@ -711,13 +711,14 @@ export default function VezeetaSurgical() {
             <div ref={chatEndRef} />
           </div>
           {/* Input */}
-          <div style={{ padding:"12px 16px", borderTop:`1px solid ${C.border}`, display:"flex", gap:8, flexShrink:0 }}>
-            <input value={chatInput} onChange={(e) => setChatInput(e.target.value)}
-              onKeyDown={(e) => e.key==="Enter" && !e.shiftKey && sendChat()}
-              placeholder="اكتب رسالتك..."
-              style={{ flex:1, padding:"10px 16px", borderRadius:100, border:`1.5px solid ${C.border}`, fontSize:14, fontFamily:font, direction:"rtl", background:C.surface }} />
+          <div style={{ padding:"12px 16px", borderTop:`1px solid ${C.border}`, display:"flex", gap:8, flexShrink:0, alignItems:"flex-end" }}>
+            <textarea value={chatInput} onChange={(e) => setChatInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key==="Enter" && !e.shiftKey) { e.preventDefault(); sendChat(); } }}
+              placeholder="اكتب رسالتك... (Shift+Enter لسطر جديد)"
+              rows={2}
+              style={{ flex:1, padding:"10px 14px", borderRadius:14, border:`1.5px solid ${C.border}`, fontSize:14, fontFamily:font, direction:"rtl", background:C.surface, resize:"none", lineHeight:1.5, maxHeight:120, overflowY:"auto" }} />
             <button onClick={sendChat} disabled={chatLoading}
-              style={{ width:42, height:42, borderRadius:12, flexShrink:0, background:`linear-gradient(135deg,${C.primary},${C.primaryDark})`, border:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
+              style={{ width:42, height:42, borderRadius:12, flexShrink:0, background:`linear-gradient(135deg,${C.primary},${C.primaryDark})`, border:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", marginBottom:1 }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
             </button>
           </div>

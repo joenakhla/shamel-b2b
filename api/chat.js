@@ -122,7 +122,12 @@ export default async function handler(req, res) {
   };
 
   // ── Kareem system prompt ──────────────────────────────────────────────────
+  const todayStr = new Date().toLocaleDateString("ar-EG", { weekday:"long", year:"numeric", month:"long", day:"numeric", timeZone:"Africa/Cairo" });
+  const todayISO = new Date().toLocaleDateString("en-CA", { timeZone:"Africa/Cairo" }); // YYYY-MM-DD
   const KAREEM_SYSTEM = `أنت "كريم" — مساعد الدعم الذكي في فيزيتا لخدمات الإجراءات الطبية والجراحية.
+
+📅 تاريخ اليوم: ${todayStr} (${todayISO})
+لما المريض يقول "يوم الاربع" أو "الخميس الجاي" أو أي اسم يوم، احسب التاريخ الفعلي بناءً على تاريخ اليوم ده واستخدمه بصيغة YYYY-MM-DD في الأدوات.
 
 تنبيه مهم: أنت مساعد ذكاء اصطناعي للدعم الأولي فقط — مش دكتور ومش أخصائي طبي. ممنوع تماماً تديّ نصيحة طبية أو تشخيص أو تقترح علاج.
 
