@@ -3,6 +3,9 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
+  const REDIS_URL = process.env.UPSTASH_REDIS_REST_URL;
+  const REDIS_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
+
   const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
   if (!ANTHROPIC_API_KEY) {
     return res.status(500).json({ error: "ANTHROPIC_API_KEY not configured" });
@@ -58,6 +61,24 @@ export default async function handler(req, res) {
 
     const data = await response.json();
     const content = data.content?.[0]?.text || "";
+
+    // Log exchange to Redis (fire and forget)
+    if (REDIS_URL && REDIS_TOKEN) {
+      const entry = JSON.stringify({
+        userMsg: messages[messages.length - 1]?.content || "",
+        assistantMsg: content,
+        timestamp: new Date().toISOString(),
+      });
+      fetch(`${REDIS_URL}/pipeline`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${REDIS_TOKEN}`, "Content-Type": "application/json" },
+        body: JSON.stringify([
+          ["LPUSH", "chats:surgical", entry],
+          ["LTRIM", "chats:surgical", "0", "999"],
+        ]),
+      }).catch(() => {});
+    }
+
     return res.status(200).json({ content });
   } catch (err) {
     console.error("Chat error:", err);

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 
 // ============ FULL TRANSLATION DICTIONARY ============
 const T = {
@@ -185,25 +186,29 @@ const NETWORK = [
 
 // ============ MAIN COMPONENT ============
 export default function ShamelB2B() {
+  const navigate = useNavigate();
   const [lang, setLang] = useState("en");
-  const [page, setPage] = useState("landing");
-  const [adminAuth, setAdminAuth] = useState(false);
-  const [adminPass, setAdminPass] = useState("");
   const [chatOpen, setChatOpen] = useState(false);
-  const [leads, setLeads] = useState([
-    { id: 1, name: "Test Company", contact: "ahmed@test.com", phone: "01012345678", employees: "50", status: "new", date: "2026-02-15", source: "landing", notes: "" }
-  ]);
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState("");
   const [formData, setFormData] = useState({ name: "", company: "", email: "", phone: "", employees: "", message: "" });
   const [roiEmployees, setRoiEmployees] = useState(50);
   const [formSubmitted, setFormSubmitted] = useState(false);
-  const [adminTab, setAdminTab] = useState("leads");
-  const [leadFilter, setLeadFilter] = useState("all");
+  const [formLoading, setFormLoading] = useState(false);
 
   const t = T[lang];
   const isRtl = lang === "ar";
   const chatEndRef = useRef(null);
+
+  const saveChatLog = (messages) => {
+    const userMessages = messages.filter((m) => m.from === "user");
+    if (userMessages.length === 0) return;
+    fetch("/api/leads", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "chat-main", messages }),
+    }).catch(() => {});
+  };
 
   // Re-init welcome message when language changes
   useEffect(() => {
@@ -252,35 +257,22 @@ export default function ShamelB2B() {
   };
 
   // ============ FORM ============
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setLeads(prev => [{
-      id: Date.now(), name: formData.company, contact: formData.email, phone: formData.phone,
-      employees: formData.employees, status: "new", date: new Date().toISOString().split("T")[0],
-      source: "landing", notes: `Contact: ${formData.name}. ${formData.message}`
-    }, ...prev]);
-
-    fetch("https://formsubmit.co/ajax/youssef.medhat@vezeeta.com", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify({
-        _subject: `New Shamel B2B Lead — ${formData.company}`,
-        Name: formData.name,
-        Company: formData.company,
-        Email: formData.email,
-        Phone: formData.phone,
-        Employees: formData.employees,
-        Message: formData.message || "N/A",
-      }),
-    }).catch(() => {});
-
+    setFormLoading(true);
+    try {
+      await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "lead", ...formData }),
+      });
+    } catch (_) {}
     setFormSubmitted(true);
+    setFormLoading(false);
     setFormData({ name: "", company: "", email: "", phone: "", employees: "", message: "" });
     setTimeout(() => setFormSubmitted(false), 5000);
   };
 
-  const updateLeadStatus = (id, status) => setLeads(prev => prev.map(l => l.id === id ? { ...l, status } : l));
-  const filteredLeads = leadFilter === "all" ? leads : leads.filter(l => l.status === leadFilter);
   const scrollTo = (id) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
 
   // ============ SHARED STYLES ============
@@ -295,130 +287,6 @@ export default function ShamelB2B() {
     sTitle: { fontSize: isRtl ? 34 : 38, fontWeight: 800, marginBottom: 8, lineHeight: 1.3 },
     sSub: { fontSize: 17, color: "#6b7280", maxWidth: 600, lineHeight: 1.7, marginBottom: 48 },
   };
-
-  // ============ ADMIN LOGIN ============
-  if (page === "admin" && !adminAuth) {
-    return (
-      <div style={{ fontFamily: "'Outfit', sans-serif", display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", background: "linear-gradient(135deg, #0a1628, #1a2d50)" }}>
-        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Noto+Sans+Arabic:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
-        <div style={{ ...sty.card, maxWidth: 400, width: "100%", textAlign: "center" }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>🔐</div>
-          <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24 }}>{t.adminTitle}</h2>
-          <input type="password" placeholder={t.adminPassword} value={adminPass} onChange={e => setAdminPass(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && (adminPass === "Shamel@2026" ? setAdminAuth(true) : alert("Wrong password"))}
-            style={{ ...sty.input, direction: "ltr", textAlign: "left", marginBottom: 16 }} />
-          <button onClick={() => adminPass === "Shamel@2026" ? setAdminAuth(true) : alert("Wrong password")} style={{ ...sty.btn, width: "100%" }}>{t.adminLogin}</button>
-          <p style={{ marginTop: 16, fontSize: 13, color: "#9ca3af", cursor: "pointer" }} onClick={() => setPage("landing")}>{t.adminBack}</p>
-        </div>
-      </div>
-    );
-  }
-
-  // ============ ADMIN PANEL ============
-  if (page === "admin" && adminAuth) {
-    return (
-      <div style={{ fontFamily: "'Outfit', sans-serif", background: "#f0f2f5", minHeight: "100vh" }}>
-        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Noto+Sans+Arabic:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
-        <div style={{ position: "sticky", top: 0, zIndex: 100, background: "#0a1628", padding: "0 24px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 64 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <span style={{ fontSize: 20, fontWeight: 800, color: "#fff" }}>Shamel</span>
-            <span style={{ ...sty.tag("#3B82F6"), background: "rgba(59,130,246,0.2)", color: "#60A5FA" }}>Admin</span>
-          </div>
-          <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={() => setPage("landing")} style={{ ...sty.btnOutline, color: "#94a3b8", borderColor: "#334155", fontSize: 13, padding: "8px 16px" }}>{t.adminViewSite}</button>
-            <button onClick={() => { setAdminAuth(false); setPage("landing"); }} style={{ fontSize: 13, padding: "8px 16px", background: "rgba(239,68,68,0.15)", color: "#EF4444", border: "none", borderRadius: 8, cursor: "pointer", fontWeight: 600 }}>{t.adminLogout}</button>
-          </div>
-        </div>
-        {/* Stats */}
-        <div style={{ maxWidth: 1200, margin: "24px auto", padding: "0 24px", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
-          {[{ label: t.adminTotalLeads, value: leads.length, icon: "📋", color: "#3B82F6" },
-            { label: t.adminNewLeads, value: leads.filter(l => l.status === "new").length, icon: "🔔", color: "#F59E0B" },
-            { label: t.adminConverted, value: leads.filter(l => l.status === "converted").length, icon: "✅", color: "#10B981" },
-            { label: t.adminChatMsgs, value: chatMessages.filter(m => m.from === "user").length, icon: "💬", color: "#8B5CF6" },
-          ].map((st, i) => (
-            <div key={i} style={{ ...sty.card, padding: 20, display: "flex", alignItems: "center", gap: 16 }}>
-              <div style={{ width: 48, height: 48, borderRadius: 12, background: st.color + "15", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22 }}>{st.icon}</div>
-              <div><div style={{ fontSize: 26, fontWeight: 800, color: st.color }}>{st.value}</div><div style={{ fontSize: 13, color: "#6b7280" }}>{st.label}</div></div>
-            </div>
-          ))}
-        </div>
-        {/* Tabs */}
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px" }}>
-          <div style={{ display: "flex", gap: 4, marginBottom: 20, background: "#fff", borderRadius: 12, padding: 4, border: "1px solid #e5e7eb", width: "fit-content" }}>
-            {["leads","chat-log"].map(tab => (
-              <button key={tab} onClick={() => setAdminTab(tab)} style={{ padding: "10px 20px", borderRadius: 8, border: "none", fontSize: 14, fontWeight: 600, cursor: "pointer",
-                background: adminTab === tab ? "#0066CC" : "transparent", color: adminTab === tab ? "#fff" : "#6b7280" }}>
-                {tab === "leads" ? t.adminLeads : t.adminChat}
-              </button>
-            ))}
-          </div>
-          {/* Leads Table */}
-          {adminTab === "leads" && (
-            <div style={sty.card}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, flexWrap: "wrap", gap: 8 }}>
-                <h3 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>{t.adminPipeline}</h3>
-                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                  {["all","new","contacted","qualified","converted","lost"].map(f => (
-                    <button key={f} onClick={() => setLeadFilter(f)} style={{ padding: "6px 14px", borderRadius: 20, border: "none", fontSize: 12, fontWeight: 600, cursor: "pointer",
-                      background: leadFilter === f ? "#0066CC" : "#f3f4f6", color: leadFilter === f ? "#fff" : "#6b7280" }}>{f.charAt(0).toUpperCase() + f.slice(1)}</button>
-                  ))}
-                </div>
-              </div>
-              <div style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
-                  <thead><tr style={{ borderBottom: "2px solid #e5e7eb" }}>
-                    {["Company","Contact","Phone","Employees","Date","Status",""].map(h => (
-                      <th key={h} style={{ padding: "12px 8px", textAlign: "left", fontWeight: 600, color: "#6b7280", fontSize: 12, textTransform: "uppercase", letterSpacing: 0.5 }}>{h}</th>
-                    ))}
-                  </tr></thead>
-                  <tbody>
-                    {filteredLeads.map(lead => (
-                      <tr key={lead.id} style={{ borderBottom: "1px solid #f3f4f6" }}>
-                        <td style={{ padding: "12px 8px", fontWeight: 600 }}>{lead.name}</td>
-                        <td style={{ padding: "12px 8px", color: "#6b7280" }}>{lead.contact}</td>
-                        <td style={{ padding: "12px 8px", color: "#6b7280" }}>{lead.phone}</td>
-                        <td style={{ padding: "12px 8px" }}>{lead.employees}</td>
-                        <td style={{ padding: "12px 8px", color: "#9ca3af", fontSize: 13 }}>{lead.date}</td>
-                        <td style={{ padding: "12px 8px" }}>
-                          <select value={lead.status} onChange={e => updateLeadStatus(lead.id, e.target.value)}
-                            style={{ padding: "6px 10px", borderRadius: 8, border: "1.5px solid #e0e4e8", fontSize: 13, cursor: "pointer",
-                              background: lead.status === "converted" ? "#D1FAE5" : lead.status === "new" ? "#FEF3C7" : lead.status === "lost" ? "#FEE2E2" : "#EFF6FF",
-                              color: lead.status === "converted" ? "#065F46" : lead.status === "new" ? "#92400E" : lead.status === "lost" ? "#991B1B" : "#1E40AF" }}>
-                            {["new","contacted","qualified","converted","lost"].map(st => <option key={st} value={st}>{st}</option>)}
-                          </select>
-                        </td>
-                        <td style={{ padding: "12px 8px" }}>
-                          <button onClick={() => { const n = prompt(t.adminNote, lead.notes); if (n !== null) setLeads(prev => prev.map(l => l.id === lead.id ? { ...l, notes: n } : l)); }}
-                            style={{ padding: "6px 12px", borderRadius: 6, border: "none", fontSize: 12, cursor: "pointer", background: "#f3f4f6", color: "#374151" }}>📝</button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-                {filteredLeads.length === 0 && <p style={{ textAlign: "center", color: "#9ca3af", padding: 40 }}>{t.adminNoLeads}</p>}
-              </div>
-            </div>
-          )}
-          {/* Chat Log */}
-          {adminTab === "chat-log" && (
-            <div style={sty.card}>
-              <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>{t.adminChatHistory} ({chatMessages.filter(m => m.from === "user").length})</h3>
-              <div style={{ maxHeight: 500, overflow: "auto", background: "#f9fafb", borderRadius: 12, padding: 16 }}>
-                {chatMessages.map((m, i) => (
-                  <div key={i} style={{ marginBottom: 8, padding: "8px 12px", borderRadius: 8, background: m.from === "user" ? "#EFF6FF" : "#fff", fontSize: 13, border: "1px solid #e5e7eb" }}>
-                    <span style={{ fontWeight: 700, color: m.from === "user" ? "#1E40AF" : "#059669", fontSize: 11, textTransform: "uppercase" }}>{m.from}</span>
-                    <div style={{ marginTop: 4, whiteSpace: "pre-wrap" }}>{m.text}</div>
-                  </div>
-                ))}
-                {chatMessages.length === 0 && <p style={{ textAlign: "center", color: "#9ca3af" }}>{t.adminNoMessages}</p>}
-              </div>
-            </div>
-          )}
-        </div>
-        <div style={{ height: 60 }} />
-      </div>
-    );
-  }
 
   // ================================================================
   // ============ LANDING PAGE ============
@@ -467,15 +335,7 @@ export default function ShamelB2B() {
             {t.langFlag} {t.langSwitch}
           </button>
           <button onClick={() => scrollTo("contact")} style={{ ...sty.btn, padding: "8px 20px", fontSize: 13 }}>{t.navCta}</button>
-          <span
-  onClick={() => {
-    const pwd = prompt("Enter admin password:");
-    if (pwd === "shamel2026") setPage("admin");
-  }}
-  style={{ cursor: "default", color: "#1e293b" }}
->
-  © 2026
-</span>
+          <span style={{ cursor: "default", color: "#1e293b" }}>© 2026</span>
         </div>
       </nav>
 
@@ -759,7 +619,7 @@ export default function ShamelB2B() {
                 </select></div>
               <div style={{ marginBottom: 20 }}><label style={{ fontSize: 13, fontWeight: 600, color: "#374151", display: "block", marginBottom: 6 }}>{t.formMsg}</label>
                 <textarea value={formData.message} onChange={e => setFormData({ ...formData, message: e.target.value })} placeholder={t.formMsgPlaceholder} style={{ ...sty.input, minHeight: 90, resize: "vertical" }} /></div>
-              <button type="submit" style={{ ...sty.btnRed, width: "100%", padding: "16px", fontSize: 16 }}>{t.formBtn}</button>
+              <button type="submit" disabled={formLoading} style={{ ...sty.btnRed, width: "100%", padding: "16px", fontSize: 16, opacity: formLoading ? 0.7 : 1 }}>{formLoading ? "جاري الإرسال..." : t.formBtn}</button>
               <p style={{ textAlign: "center", fontSize: 12, color: "#9ca3af", marginTop: 12 }}>{t.formSecure}</p>
             </form>
           )}
@@ -772,7 +632,7 @@ export default function ShamelB2B() {
         <p style={{ color: "#4b5563", fontSize: 14, marginBottom: 16 }}>{t.footerSub}</p>
         <div style={{ display: "flex", gap: 24, justifyContent: "center", fontSize: 13, color: "#64748b" }}>
           <span>vezeeta.com</span><span>support@vezeeta.com</span>
-          <span onClick={() => setPage("admin")} style={{ cursor: "pointer" }}>{t.footerAdmin}</span>
+          <span onClick={() => navigate("/admin")} style={{ cursor: "pointer" }}>{t.footerAdmin}</span>
         </div>
       </footer>
 
@@ -826,7 +686,7 @@ export default function ShamelB2B() {
           <div style={{ background: "linear-gradient(135deg, #0066CC, #0052A3)", padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
             <div><div style={{ color: "#fff", fontWeight: 700, fontSize: 15 }}>{t.chatTitle}</div>
               <div style={{ color: "rgba(255,255,255,0.7)", fontSize: 12 }}>{t.chatSubtitle}</div></div>
-            <button onClick={() => setChatOpen(false)} style={{ background: "rgba(255,255,255,0.15)", border: "none", borderRadius: 8, width: 32, height: 32, color: "#fff", fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+            <button onClick={() => { saveChatLog(chatMessages); setChatOpen(false); }} style={{ background: "rgba(255,255,255,0.15)", border: "none", borderRadius: 8, width: 32, height: 32, color: "#fff", fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
           </div>
           {/* Messages */}
           <div style={{ flex: 1, overflowY: "auto", padding: 16, display: "flex", flexDirection: "column", gap: 12, maxHeight: "45vh" }}>

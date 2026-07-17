@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 
 // ─── Brand Colors ───────────────────────────────────────────────────────────
 const C = {
@@ -89,9 +90,6 @@ const formatDisplayDate = (dateStr) => {
   return `${days[day]}، ${d}/${m}/${y}`;
 };
 
-// ─── Admin Credentials ───────────────────────────────────────────────────────
-const ADMIN_EMAIL = "youssef.medhat@vezeeta.com";
-const ADMIN_PASSWORD = "y0ussef(Joe)";
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 export default function VezeetaSurgical() {
@@ -121,15 +119,7 @@ export default function VezeetaSurgical() {
   const [chatInput, setChatInput]   = useState("");
   const [chatLoading, setChatLoading] = useState(false);
 
-  // Admin state
-  const [showAdmin, setShowAdmin]         = useState(false);
-  const [adminAuth, setAdminAuth]         = useState(false);
-  const [adminEmail, setAdminEmail]       = useState("");
-  const [adminPass, setAdminPass]         = useState("");
-  const [adminLoginErr, setAdminLoginErr] = useState("");
-  const [adminDate, setAdminDate]         = useState(new Date().toISOString().split("T")[0]);
-  const [adminBookings, setAdminBookings] = useState({});
-  const [adminLoading, setAdminLoading]   = useState(false);
+  const navigate = useNavigate();
 
   const formRef    = useRef(null);
   const chatEndRef = useRef(null);
@@ -146,32 +136,6 @@ export default function VezeetaSurgical() {
     document.addEventListener("mousedown", handle);
     return () => document.removeEventListener("mousedown", handle);
   }, []);
-
-  // ─── Admin ─────────────────────────────────────────────────────────────────
-  const handleAdminLogin = (e) => {
-    e.preventDefault();
-    if (adminEmail.trim().toLowerCase() === ADMIN_EMAIL && adminPass === ADMIN_PASSWORD) {
-      setAdminAuth(true);
-      setAdminLoginErr("");
-      fetchAdminBookings(adminDate);
-    } else {
-      setAdminLoginErr("البريد الإلكتروني أو كلمة السر غلط");
-    }
-  };
-
-  const fetchAdminBookings = async (date) => {
-    setAdminLoading(true);
-    try {
-      const res = await fetch(`/api/bookings?date=${date}`, {
-        headers: { "x-admin-token": ADMIN_PASSWORD },
-      });
-      const data = await res.json();
-      setAdminBookings(data.slots || {});
-    } catch (_) {
-      setAdminBookings({});
-    }
-    setAdminLoading(false);
-  };
 
   // ─── Search ────────────────────────────────────────────────────────────────
   const handleSearch = (q) => {
@@ -292,170 +256,6 @@ export default function VezeetaSurgical() {
     transition:"border 0.2s",
   };
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // ── ADMIN PANEL ──────────────────────────────────────────────────────────
-  // ══════════════════════════════════════════════════════════════════════════
-  if (showAdmin) {
-    if (!adminAuth) {
-      return (
-        <div dir="rtl" style={{ fontFamily:font, minHeight:"100vh", background:"linear-gradient(135deg,#1B2559,#2d3a7c)", display:"flex", alignItems:"center", justifyContent:"center" }}>
-          <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet" />
-          <div style={{ background:C.white, borderRadius:20, padding:40, width:"100%", maxWidth:420, boxShadow:"0 16px 64px rgba(0,0,0,0.25)" }}>
-            <div style={{ textAlign:"center", marginBottom:28 }}>
-              <div style={{ fontSize:48, marginBottom:8 }}>🔐</div>
-              <h2 style={{ fontSize:22, fontWeight:800, color:C.charcoal }}>دخول الفريق</h2>
-              <p style={{ fontSize:13, color:C.gray, marginTop:4 }}>لوحة تحكم الحجوزات</p>
-            </div>
-            <form onSubmit={handleAdminLogin}>
-              <div style={{ marginBottom:16 }}>
-                <label style={{ fontSize:13, fontWeight:700, color:C.charcoal, display:"block", marginBottom:6 }}>البريد الإلكتروني</label>
-                <input
-                  type="email" required
-                  value={adminEmail}
-                  onChange={(e) => setAdminEmail(e.target.value)}
-                  placeholder="your@vezeeta.com"
-                  style={{ ...inputStyle, direction:"ltr" }}
-                />
-              </div>
-              <div style={{ marginBottom:20 }}>
-                <label style={{ fontSize:13, fontWeight:700, color:C.charcoal, display:"block", marginBottom:6 }}>كلمة السر</label>
-                <input
-                  type="password" required
-                  value={adminPass}
-                  onChange={(e) => setAdminPass(e.target.value)}
-                  placeholder="••••••••••"
-                  style={{ ...inputStyle, direction:"ltr" }}
-                />
-              </div>
-              {adminLoginErr && (
-                <div style={{ background:"#FEE2E2", color:"#991B1B", borderRadius:8, padding:"10px 14px", marginBottom:16, fontSize:14 }}>
-                  {adminLoginErr}
-                </div>
-              )}
-              <button type="submit" style={{ ...btnPrimary, width:"100%", borderRadius:12, padding:"14px" }}>دخول</button>
-            </form>
-            <p style={{ textAlign:"center", marginTop:16, fontSize:13, color:C.gray, cursor:"pointer" }} onClick={() => setShowAdmin(false)}>
-              ← رجوع للصفحة الرئيسية
-            </p>
-          </div>
-        </div>
-      );
-    }
-
-    // ── Authenticated Admin ─────────────────────────────────────────────────
-    const totalBooked = Object.keys(adminBookings).length;
-    const allSlotsFull = TIME_SLOTS.every((t) => adminBookings[t]);
-
-    return (
-      <div dir="rtl" style={{ fontFamily:font, minHeight:"100vh", background:C.surface }}>
-        <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet" />
-
-        {/* Admin Nav */}
-        <nav style={{ background:C.charcoal, padding:"0 24px", height:60, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-          <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-            <div style={{ width:32, height:32, borderRadius:8, background:"#0066CC", display:"flex", alignItems:"center", justifyContent:"center", position:"relative", overflow:"hidden" }}>
-              <span style={{ color:"#fff", fontWeight:900, fontSize:18 }}>V</span>
-              <div style={{ position:"absolute", bottom:0, left:0, right:0, height:5, background:"#E31B23" }} />
-            </div>
-            <span style={{ color:"#fff", fontWeight:800, fontSize:16 }}>فيزيتا — لوحة الحجوزات</span>
-          </div>
-          <div style={{ display:"flex", gap:8 }}>
-            <button onClick={() => setShowAdmin(false)} style={{ background:"rgba(255,255,255,0.1)", color:"#fff", border:"none", borderRadius:8, padding:"8px 16px", fontSize:13, cursor:"pointer", fontFamily:font }}>
-              ← الصفحة الرئيسية
-            </button>
-            <button onClick={() => { setAdminAuth(false); setAdminEmail(""); setAdminPass(""); }} style={{ background:"rgba(239,68,68,0.15)", color:"#EF4444", border:"none", borderRadius:8, padding:"8px 16px", fontSize:13, cursor:"pointer", fontFamily:font }}>
-              خروج
-            </button>
-          </div>
-        </nav>
-
-        <div style={{ maxWidth:900, margin:"32px auto", padding:"0 24px" }}>
-          {/* Date Picker */}
-          <div style={{ background:C.white, borderRadius:16, padding:24, marginBottom:24, border:`1px solid ${C.border}`, boxShadow:"0 2px 12px rgba(0,0,0,0.04)" }}>
-            <h2 style={{ fontSize:18, fontWeight:800, color:C.charcoal, marginBottom:16 }}>📅 اختر يوم لعرض الحجوزات</h2>
-            <div style={{ display:"flex", gap:12, alignItems:"center", flexWrap:"wrap" }}>
-              <input
-                type="date"
-                value={adminDate}
-                min="2026-01-01"
-                max={getMaxDate()}
-                onChange={(e) => {
-                  setAdminDate(e.target.value);
-                  fetchAdminBookings(e.target.value);
-                }}
-                style={{ ...inputStyle, width:"auto", direction:"ltr" }}
-              />
-              <span style={{ fontSize:14, color:C.slate, fontWeight:600 }}>
-                {formatDisplayDate(adminDate)}
-              </span>
-              <span style={{
-                padding:"4px 12px", borderRadius:100, fontSize:12, fontWeight:700,
-                background: totalBooked === 0 ? "#F0FDF4" : totalBooked >= TIME_SLOTS.length ? "#FEE2E2" : C.primaryLight,
-                color: totalBooked === 0 ? "#166534" : totalBooked >= TIME_SLOTS.length ? "#991B1B" : C.primaryDark,
-              }}>
-                {totalBooked} / {TIME_SLOTS.length} محجوز
-              </span>
-            </div>
-          </div>
-
-          {/* Bookings Grid */}
-          {adminLoading ? (
-            <div style={{ textAlign:"center", padding:60, color:C.gray }}>جاري التحميل...</div>
-          ) : (
-            <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
-              {TIME_SLOTS.map((slot) => {
-                const booking = adminBookings[slot];
-                return (
-                  <div key={slot} style={{
-                    background: booking ? "#F0FDF4" : C.white,
-                    borderRadius:12, padding:"16px 20px",
-                    border: `1.5px solid ${booking ? "#86EFAC" : C.border}`,
-                    display:"flex", alignItems:"center", gap:16, flexWrap:"wrap",
-                  }}>
-                    {/* Time */}
-                    <div style={{
-                      minWidth:80, padding:"6px 14px", borderRadius:100,
-                      background: booking ? "#166534" : C.surface,
-                      color: booking ? "#fff" : C.slate,
-                      fontSize:14, fontWeight:800, textAlign:"center", flexShrink:0,
-                    }}>
-                      {formatTimeAr(slot)}
-                    </div>
-
-                    {booking ? (
-                      <>
-                        <div style={{ flex:1, minWidth:0 }}>
-                          <div style={{ fontSize:15, fontWeight:700, color:C.charcoal }}>{booking.name}</div>
-                          <div style={{ fontSize:13, color:C.slate, marginTop:2 }}>{booking.specialty}</div>
-                        </div>
-                        <div style={{ fontSize:14, color:C.slate, direction:"ltr", fontWeight:600 }}>
-                          📱 {booking.phone}
-                        </div>
-                        {booking.notes && (
-                          <div style={{ width:"100%", fontSize:12, color:C.gray, background:C.surface, borderRadius:8, padding:"6px 10px", marginTop:4 }}>
-                            📝 {booking.notes}
-                          </div>
-                        )}
-                      </>
-                    ) : (
-                      <div style={{ fontSize:14, color:C.gray }}>متاح</div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {/* Summary */}
-          {!adminLoading && totalBooked === 0 && (
-            <div style={{ textAlign:"center", padding:40, color:C.gray, fontSize:15 }}>
-              لا توجد حجوزات في هذا اليوم
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
 
   // ══════════════════════════════════════════════════════════════════════════
   // ── LANDING PAGE ─────────────────────────────────────────────────────────
@@ -855,7 +655,7 @@ export default function VezeetaSurgical() {
           </div>
           <p style={{ color:C.gray, fontSize:13, marginBottom:20 }}>© ٢٠٢٦ فيزيتا. جميع الحقوق محفوظة.</p>
           <p style={{ color:"#64748b", fontSize:12, marginBottom:16 }}>فيزيتا لا تقدم نصائح طبية. الاستشارة النهائية مع الطبيب المعالج.</p>
-          <span onClick={() => setShowAdmin(true)} style={{ fontSize:12, color:"#374151", cursor:"pointer", userSelect:"none" }}>دخول الفريق</span>
+          <span onClick={() => navigate("/admin")} style={{ fontSize:12, color:"#374151", cursor:"pointer", userSelect:"none" }}>دخول الفريق</span>
         </div>
       </footer>
 
