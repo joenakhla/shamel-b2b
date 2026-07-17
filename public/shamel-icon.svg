@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <clipPath id="circ"><circle cx="50" cy="50" r="48"/></clipPath>
+  </defs>
+  <!-- Light background -->
+  <circle cx="50" cy="50" r="50" fill="#EBF5FB"/>
+  <!-- Outer arcs -->
+  <path d="M50 2 A48 48 0 0 0 5 38" stroke="#00B4D8" stroke-width="12" fill="none" stroke-linecap="round"/>
+  <path d="M5 62 A48 48 0 0 0 50 98" stroke="#0066CC" stroke-width="12" fill="none" stroke-linecap="round"/>
+  <path d="M95 35 A48 48 0 0 0 65 98" stroke="#004FA3" stroke-width="12" fill="none" stroke-linecap="round"/>
+  <!-- White inner circle -->
+  <circle cx="50" cy="50" r="30" fill="white"/>
+  <!-- ش (shin) character -->
+  <text x="50" y="62" font-family="'Tajawal','Arial',sans-serif" font-weight="900"
+        font-size="34" fill="#0066CC" text-anchor="middle">ش</text>
+</svg>

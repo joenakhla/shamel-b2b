@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 110">
+  <defs>
+    <clipPath id="card">
+      <rect width="100" height="110" rx="12"/>
+    </clipPath>
+  </defs>
+  <!-- Blue background -->
+  <rect width="100" height="110" rx="12" fill="#0066CC"/>
+  <!-- Red bar bottom (clipped to rounded rect) -->
+  <rect y="87" width="100" height="23" fill="#E31B23" clip-path="url(#card)"/>
+  <!-- Bold white V -->
+  <text x="50" y="66" font-family="'Arial Black','Impact','Franklin Gothic Heavy',sans-serif"
+        font-weight="900" font-size="72" fill="white"
+        text-anchor="middle" dominant-baseline="auto" letter-spacing="-2">V</text>
+</svg>

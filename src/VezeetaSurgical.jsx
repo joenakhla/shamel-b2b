@@ -126,6 +126,12 @@ export default function VezeetaSurgical() {
   const searchRef  = useRef(null);
 
   useEffect(() => {
+    const favicon = document.getElementById("favicon");
+    if (favicon) favicon.href = "/vezeeta-logo.svg";
+    return () => { if (favicon) favicon.href = "/shamel-icon.svg"; };
+  }, []);
+
+  useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior:"smooth" });
   }, [chatMessages]);
 
@@ -302,10 +308,7 @@ export default function VezeetaSurgical() {
         display:"flex", alignItems:"center", justifyContent:"space-between",
       }}>
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-          <div style={{ width:38, height:38, borderRadius:10, background:"#0066CC", display:"flex", alignItems:"center", justifyContent:"center", position:"relative", overflow:"hidden" }}>
-            <span style={{ color:"#fff", fontWeight:900, fontSize:20 }}>V</span>
-            <div style={{ position:"absolute", bottom:0, left:0, right:0, height:6, background:"#E31B23" }} />
-          </div>
+          <img src="/vezeeta-logo.svg" alt="Vezeeta" style={{ height:44, width:"auto" }} />
           <span style={{ fontSize:20, fontWeight:800, color:C.charcoal }}>فيزيتا</span>
           <span style={{ fontSize:12, fontWeight:500, color:C.gray, marginTop:2 }}>الإجراءات الطبية</span>
         </div>

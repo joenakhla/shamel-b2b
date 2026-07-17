@@ -169,10 +169,7 @@ export default function AdminPanel() {
       {/* ── Nav ── */}
       <nav style={{ background:"#0a1628", padding:"0 24px", height:60, display:"flex", alignItems:"center", justifyContent:"space-between", position:"sticky", top:0, zIndex:50 }}>
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-          <div style={{ width:32, height:32, borderRadius:8, background:"#0066CC", display:"flex", alignItems:"center", justifyContent:"center", position:"relative", overflow:"hidden" }}>
-            <span style={{ color:"#fff", fontWeight:900, fontSize:16 }}>V</span>
-            <div style={{ position:"absolute", bottom:0, left:0, right:0, height:4, background:"#E31B23" }} />
-          </div>
+          <img src="/vezeeta-logo.svg" alt="Vezeeta" style={{ height:38, width:"auto" }} />
           <span style={{ color:"#fff", fontWeight:800, fontSize:16 }}>لوحة التحكم الموحدة</span>
         </div>
         <div style={{ display:"flex", gap:8 }}>

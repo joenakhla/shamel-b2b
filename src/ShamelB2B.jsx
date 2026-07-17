@@ -212,6 +212,11 @@ export default function ShamelB2B() {
 
   // Re-init welcome message when language changes
   useEffect(() => {
+    const favicon = document.getElementById("favicon");
+    if (favicon) favicon.href = "/shamel-icon.svg";
+  }, []);
+
+  useEffect(() => {
     setChatMessages([{ from: "bot", text: t.chatWelcome }]);
   }, [lang]);
 
@@ -318,10 +323,7 @@ export default function ShamelB2B() {
       {/* ===== NAV ===== */}
       <nav style={{ position: "sticky", top: 0, zIndex: 100, background: "rgba(255,255,255,0.95)", backdropFilter: "blur(20px)", borderBottom: "1px solid #e8ecf0", padding: "0 24px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 64 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }} onClick={() => scrollTo("hero")}>
-          <div style={{ width: 32, height: 32, borderRadius: 8, background: "linear-gradient(135deg, #0066CC, #E31B23)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <span style={{ color: "#fff", fontWeight: 900, fontSize: 14 }}>S</span>
-          </div>
-          <span style={{ fontSize: 18, fontWeight: 800, color: "#0a1628" }}>Shamel</span>
+          <img src="/shamel-logo.svg" alt="Shamel" style={{ height: 40, width: "auto" }} />
           <span style={{ fontSize: 11, fontWeight: 600, color: "#6b7280", marginTop: 2 }}>{t.forBusiness}</span>
         </div>
         <div style={{ display: "flex", gap: isRtl ? 18 : 24, alignItems: "center" }} className="hide-mobile">
