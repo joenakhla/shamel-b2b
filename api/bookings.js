@@ -56,11 +56,24 @@ export default async function handler(req, res) {
     }
 
     // Validate working day (0=Sun … 4=Thu)
-    const dayOfWeek = new Date(date + "T12:00:00").getDay();
+    const requestedDate = new Date(date + "T12:00:00");
+    const dayOfWeek = requestedDate.getDay();
     if (dayOfWeek > 4) {
       return res.status(400).json({
         error: "invalid_day",
         message: "المواعيد متاحة من الأحد للخميس فقط",
+      });
+    }
+
+    // Validate within 2-week window
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const maxDate = new Date(today);
+    maxDate.setDate(today.getDate() + 14);
+    if (requestedDate < today || requestedDate > maxDate) {
+      return res.status(400).json({
+        error: "out_of_range",
+        message: "الحجز متاح خلال الأسبوعين القادمين فقط",
       });
     }
 
