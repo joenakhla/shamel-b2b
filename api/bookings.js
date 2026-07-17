@@ -122,31 +122,23 @@ export default async function handler(req, res) {
     const min = time.split(":")[1];
     const displayTime = `${hour > 12 ? hour - 12 : hour}:${min} ${hour >= 12 ? "PM" : "AM"}`;
 
-    // Send email to all three recipients
-    try {
-      await fetch(
-        "https://formsubmit.co/ajax/youssef.medhat@vezeeta.com",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          body: JSON.stringify({
-            _subject: `حجز موعد مكالمة — ${specialty} — ${name}`,
-            _cc: "medhat.maher@vezeeta.com,esraa.elsayed@vezeeta.com",
-            _template: "table",
-            الاسم: name,
-            "رقم الموبايل": phone,
-            التخصص: specialty,
-            "تاريخ المكالمة": displayDate,
-            "وقت المكالمة": displayTime,
-            ملاحظات: notes || "لا يوجد",
-            المصدر: "صفحة فيزيتا الإجراءات الطبية",
-          }),
-        }
-      );
-    } catch (_) {}
+    // Send email — fire and forget (don't await, avoids Vercel timeout if formsubmit is slow)
+    fetch("https://formsubmit.co/ajax/youssef.medhat@vezeeta.com", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({
+        _subject: `حجز موعد مكالمة — ${specialty} — ${name}`,
+        _cc: "medhat.maher@vezeeta.com,esraa.elsayed@vezeeta.com",
+        _template: "table",
+        الاسم: name,
+        "رقم الموبايل": phone,
+        التخصص: specialty,
+        "تاريخ المكالمة": displayDate,
+        "وقت المكالمة": displayTime,
+        ملاحظات: notes || "لا يوجد",
+        المصدر: "صفحة فيزيتا الإجراءات الطبية",
+      }),
+    }).catch(() => {});
 
     return res.json({ success: true });
     } catch (err) {

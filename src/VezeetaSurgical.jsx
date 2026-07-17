@@ -204,17 +204,18 @@ export default function VezeetaSurgical() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
-      const data = await res.json();
+      let data = {};
+      try { data = await res.json(); } catch (_) {}
 
       if (!res.ok) {
-        setBookingError(data.message || "حصل خطأ. حاول تاني.");
+        setBookingError(data.message || `خطأ ${res.status} — حاول تاني.`);
         setFormLoading(false);
         return;
       }
 
       setFormSubmitted(true);
     } catch (_) {
-      setBookingError("حصل خطأ في الاتصال. تأكد من الإنترنت وحاول تاني.");
+      setBookingError("تعذّر الاتصال بالخادم. تأكد من الإنترنت وحاول تاني.");
     }
 
     setFormLoading(false);

@@ -97,28 +97,26 @@ export default async function handler(req, res) {
       ]);
     }
 
-    // Email notification
+    // Email — fire and forget
     const [y, m, d] = date.split("-");
     const displayDate = `${d}/${m}/${y}`;
     const displayTime = fmtTime(time);
-    try {
-      await fetch("https://formsubmit.co/ajax/youssef.medhat@vezeeta.com", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({
-          _subject: `حجز موعد (كريم) — ${specialty} — ${name}`,
-          _cc: "medhat.maher@vezeeta.com,esraa.elsayed@vezeeta.com",
-          _template: "table",
-          الاسم: name,
-          "رقم الموبايل": phone,
-          التخصص: specialty,
-          "تاريخ المكالمة": displayDate,
-          "وقت المكالمة": displayTime,
-          ملاحظات: notes || "لا يوجد",
-          المصدر: "كريم — مساعد الدعم الذكي",
-        }),
-      });
-    } catch (_) {}
+    fetch("https://formsubmit.co/ajax/youssef.medhat@vezeeta.com", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({
+        _subject: `حجز موعد (كريم) — ${specialty} — ${name}`,
+        _cc: "medhat.maher@vezeeta.com,esraa.elsayed@vezeeta.com",
+        _template: "table",
+        الاسم: name,
+        "رقم الموبايل": phone,
+        التخصص: specialty,
+        "تاريخ المكالمة": displayDate,
+        "وقت المكالمة": displayTime,
+        ملاحظات: notes || "لا يوجد",
+        المصدر: "كريم — مساعد الدعم الذكي",
+      }),
+    }).catch(() => {});
 
     return { success: true, name, phone, specialty, date, time, displayDate, displayTime };
   };
