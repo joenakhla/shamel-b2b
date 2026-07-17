@@ -4,9 +4,14 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, x-admin-token");
   if (req.method === "OPTIONS") return res.status(200).end();
 
-  const REDIS_URL = process.env.UPSTASH_REDIS_REST_URL;
-  const REDIS_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
-  const hasRedis = !!(REDIS_URL && REDIS_TOKEN);
+  let REDIS_URL = process.env.UPSTASH_REDIS_REST_URL || "";
+  const REDIS_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || "";
+  // Convert redis-cli URL (redis://default:TOKEN@host:port) → REST URL (https://host)
+  if (REDIS_URL.startsWith("redis://") || REDIS_URL.startsWith("rediss://")) {
+    const m = REDIS_URL.match(/@([^:/]+)/);
+    if (m) REDIS_URL = `https://${m[1]}`;
+  }
+  const hasRedis = !!(REDIS_URL.startsWith("https://") && REDIS_TOKEN);
 
   const redisCmd = async (commands) => {
     if (!hasRedis) return commands.map(() => ({ result: null }));
@@ -143,7 +148,7 @@ export default async function handler(req, res) {
     return res.json({ success: true });
     } catch (err) {
       console.error("Booking POST error:", err.message, err.stack);
-      return res.status(500).json({ error: "server_error", message: `خطأ: ${err.message}` });
+      return res.status(500).json({ error: "server_error", message: "حصل خطأ في الخادم. حاول تاني." });
     }
   }
 

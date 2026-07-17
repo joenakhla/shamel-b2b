@@ -1,8 +1,12 @@
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-  const REDIS_URL  = process.env.UPSTASH_REDIS_REST_URL;
-  const REDIS_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
+  let REDIS_URL = process.env.UPSTASH_REDIS_REST_URL || "";
+  const REDIS_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || "";
+  if (REDIS_URL.startsWith("redis://") || REDIS_URL.startsWith("rediss://")) {
+    const m = REDIS_URL.match(/@([^:/]+)/);
+    if (m) REDIS_URL = `https://${m[1]}`;
+  }
   const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
   if (!ANTHROPIC_API_KEY) return res.status(500).json({ error: "ANTHROPIC_API_KEY not configured" });
 

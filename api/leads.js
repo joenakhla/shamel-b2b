@@ -4,9 +4,13 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, x-admin-token");
   if (req.method === "OPTIONS") return res.status(200).end();
 
-  const REDIS_URL = process.env.UPSTASH_REDIS_REST_URL;
-  const REDIS_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
-  const hasRedis = !!(REDIS_URL && REDIS_TOKEN);
+  let REDIS_URL = process.env.UPSTASH_REDIS_REST_URL || "";
+  const REDIS_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || "";
+  if (REDIS_URL.startsWith("redis://") || REDIS_URL.startsWith("rediss://")) {
+    const m = REDIS_URL.match(/@([^:/]+)/);
+    if (m) REDIS_URL = `https://${m[1]}`;
+  }
+  const hasRedis = !!(REDIS_URL.startsWith("https://") && REDIS_TOKEN);
   const ADMIN_TOKEN = "y0ussef(Joe)";
 
   const redisCmd = async (commands) => {
