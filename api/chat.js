@@ -22,6 +22,24 @@ export default async function handler(req, res) {
 
   const TIME_SLOTS = ["13:00","13:30","14:00","14:30","15:00","15:30","16:00","16:30","17:00","17:30"];
 
+  // Converts Arabic/English time expressions to 24h "HH:MM" format
+  const normalizeTime = (raw) => {
+    if (!raw) return raw;
+    const s = String(raw).trim();
+    if (/^\d{2}:\d{2}$/.test(s)) return s; // already HH:MM
+    const match = s.match(/^(\d{1,2})(?::(\d{2}))?\s*(pm|am|م|ص|مساء|صباح|العصر|عصراً|الظهر|ظهراً)?$/i);
+    if (!match) return s;
+    let h = parseInt(match[1]);
+    const m = parseInt(match[2] || "0");
+    const period = (match[3] || "").toLowerCase();
+    const isPm = ["pm", "م", "مساء", "العصر", "عصراً"].includes(period);
+    const isAm = ["am", "ص", "صباح", "الظهر", "ظهراً"].includes(period);
+    if (isPm && h < 12) h += 12;
+    else if (isAm && h === 12) h = 0;
+    else if (!isPm && !isAm && h >= 1 && h <= 6) h += 12; // 1-6 range is all PM slots
+    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+  };
+
   const isWorkingDay = (dateStr) => {
     const day = new Date(dateStr + "T12:00:00").getDay();
     return day >= 0 && day <= 4;
@@ -54,8 +72,10 @@ export default async function handler(req, res) {
 
   // ── Tool: make_booking ────────────────────────────────────────────────────
   const makeBooking = async ({ name, phone, specialty, date, time, notes }) => {
+    const normalizedTime = normalizeTime(time);
     if (!isWorkingDay(date)) return { success: false, error: "يوم غير صحيح" };
-    if (!TIME_SLOTS.includes(time)) return { success: false, error: "وقت غير صحيح — الأوقات المتاحة من 13:00 لـ 17:30" };
+    if (!TIME_SLOTS.includes(normalizedTime)) return { success: false, error: `وقت غير صحيح "${time}" → "${normalizedTime}" — الأوقات المتاحة: ${TIME_SLOTS.join(", ")}` };
+    time = normalizedTime;
 
     if (REDIS_URL && REDIS_TOKEN) {
       const [countRes, slotRes] = await redisCmd([
@@ -125,7 +145,14 @@ export default async function handler(req, res) {
 - لو الميعاد محجوز أو مش متاح، اعرض عليه بدائل
 - رسائلك تكون مختصرة وواضحة — مش أكتر من ٣ أسطر في الرسالة الواحدة
 - ردّ بالعربي المصري دايماً
-- بعد الحجز، أكّدله التفاصيل: الاسم، الموبايل، التخصص، التاريخ والوقت`;
+- بعد الحجز، أكّدله التفاصيل: الاسم، الموبايل، التخصص، التاريخ والوقت
+
+⚠️ تعليمات مهمة لاستخدام الأدوات:
+- لما تبعت الوقت لـ make_booking، لازم يكون بصيغة 24 ساعة HH:MM مثل: 13:00 أو 14:30 أو 16:00
+- "4 م" أو "4 PM" أو "4 العصر" = 16:00
+- "1 م" أو "1 PM" = 13:00
+- "5 و نص م" أو "5:30 م" = 17:30
+- لو المريض قال "4 العصر"، ابعت time: "16:00" في make_booking`;
 
   // ── Tool definitions ──────────────────────────────────────────────────────
   const TOOLS = [

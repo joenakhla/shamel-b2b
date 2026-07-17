@@ -46,6 +46,7 @@ export default async function handler(req, res) {
 
   // ── POST: book a slot ────────────────────────────────────────────────────
   if (req.method === "POST") {
+    try {
     const { date, time, name, phone, specialty, notes } = req.body || {};
 
     if (!date || !time || !name || !phone || !specialty) {
@@ -135,6 +136,10 @@ export default async function handler(req, res) {
     } catch (_) {}
 
     return res.json({ success: true });
+    } catch (err) {
+      console.error("Booking POST error:", err);
+      return res.status(500).json({ error: "server_error", message: "حصل خطأ في الخادم. حاول تاني." });
+    }
   }
 
   return res.status(405).json({ error: "Method not allowed" });
