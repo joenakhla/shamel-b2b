@@ -18,7 +18,7 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify(commands),
     });
-    return r.json();
+    try { return await r.json(); } catch (_) { return commands.map(() => ({ result: null })); }
   };
 
   // ── GET: check slot availability for a date ──────────────────────────────
@@ -142,8 +142,8 @@ export default async function handler(req, res) {
 
     return res.json({ success: true });
     } catch (err) {
-      console.error("Booking POST error:", err);
-      return res.status(500).json({ error: "server_error", message: "حصل خطأ في الخادم. حاول تاني." });
+      console.error("Booking POST error:", err.message, err.stack);
+      return res.status(500).json({ error: "server_error", message: `خطأ: ${err.message}` });
     }
   }
 
