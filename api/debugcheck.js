@@ -9,9 +9,11 @@ export default async function handler(req, res) {
   if (url && token) {
     let testUrl = url;
     let testToken = token;
-    if (testUrl.startsWith("redis://") || testUrl.startsWith("rediss://")) {
-      const hostM = testUrl.match(/@([^:/]+)/);
-      const tokenM = testUrl.match(/\/\/[^:]+:([^@]+)@/);
+    const cliMatch = testUrl.match(/rediss?:\/\/[^\s"']+/);
+    if (cliMatch) {
+      const raw = cliMatch[0];
+      const hostM = raw.match(/@([^:/]+)/);
+      const tokenM = raw.match(/\/\/[^:]+:([^@]+)@/);
       if (hostM) testUrl = `https://${hostM[1]}`;
       if (tokenM && !testToken) testToken = tokenM[1];
     }

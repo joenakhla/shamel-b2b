@@ -3,9 +3,11 @@ export default async function handler(req, res) {
 
   let REDIS_URL   = process.env.UPSTASH_REDIS_REST_URL   || "";
   let REDIS_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || "";
-  if (REDIS_URL.startsWith("redis://") || REDIS_URL.startsWith("rediss://")) {
-    const hostM  = REDIS_URL.match(/@([^:/]+)/);
-    const tokenM = REDIS_URL.match(/\/\/[^:]+:([^@]+)@/);
+  const cliMatch = REDIS_URL.match(/rediss?:\/\/[^\s"']+/);
+  if (cliMatch) {
+    const raw = cliMatch[0];
+    const hostM  = raw.match(/@([^:/]+)/);
+    const tokenM = raw.match(/\/\/[^:]+:([^@]+)@/);
     if (hostM)  REDIS_URL   = `https://${hostM[1]}`;
     if (tokenM && !REDIS_TOKEN) REDIS_TOKEN = tokenM[1];
   }
