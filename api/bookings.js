@@ -52,7 +52,7 @@ export default async function handler(req, res) {
         method: "POST", signal: ctrl.signal,
         headers: { Authorization: `Bearer ${RESEND_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "Vezeeta Bookings <bookings@vezeeta.com>",
+          from: "Vezeeta Bookings <onboarding@resend.dev>",
           to: ["youssef.medhat@vezeeta.com", "medhat.maher@vezeeta.com", "esraa.elsayed@vezeeta.com"],
           subject, html,
         }),
