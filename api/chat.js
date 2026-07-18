@@ -87,7 +87,7 @@ export default async function handler(req, res) {
         ["HEXISTS", `bookings:${date}`, time],
       ]);
       const count = parseInt(countRes?.result || "0");
-      if (count >= 2) return { success: false, error: "رقم الموبايل ده وصل للحد الأقصى — ٢ حجوزات بحد أقصى لكل رقم" };
+      if (count >= 1) return { success: false, error: "رقم الموبايل ده عنده حجز مسبق. كل رقم يقدر يحجز مرة واحدة بس." };
       if (slotRes?.result === 1) return { success: false, error: "الميعاد ده اتحجز. اختار وقت تاني." };
 
       const bookingData = JSON.stringify({

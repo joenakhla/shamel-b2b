@@ -52,100 +52,84 @@ export default async function handler(req, res) {
   // ── POST: book a slot ────────────────────────────────────────────────────
   if (req.method === "POST") {
     try {
-    const { date, time, name, phone, specialty, notes } = req.body || {};
+      const { date, time, name, phone, specialty, notes } = req.body || {};
 
-    if (!date || !time || !name || !phone || !specialty) {
-      return res
-        .status(400)
-        .json({ error: "missing_fields", message: "كل الحقول مطلوبة" });
-    }
-
-    // Validate working day (0=Sun … 4=Thu)
-    const requestedDate = new Date(date + "T12:00:00");
-    const dayOfWeek = requestedDate.getDay();
-    if (dayOfWeek > 4) {
-      return res.status(400).json({
-        error: "invalid_day",
-        message: "المواعيد متاحة من الأحد للخميس فقط",
-      });
-    }
-
-    // Validate within 2-week window
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const maxDate = new Date(today);
-    maxDate.setDate(today.getDate() + 14);
-    if (requestedDate < today || requestedDate > maxDate) {
-      return res.status(400).json({
-        error: "out_of_range",
-        message: "الحجز متاح خلال الأسبوعين القادمين فقط",
-      });
-    }
-
-    if (hasRedis) {
-      const [countRes, slotRes] = await redisCmd([
-        ["GET", `phone_count:${phone}`],
-        ["HEXISTS", `bookings:${date}`, time],
-      ]);
-
-      const count = parseInt(countRes?.result || "0");
-      if (count >= 2) {
-        return res.status(400).json({
-          error: "max_bookings",
-          message:
-            "رقم الموبايل ده وصل للحد الأقصى من الحجوزات (٢ مواعيد فقط لكل رقم)",
-        });
+      if (!date || !time || !name || !phone || !specialty) {
+        return res.status(400).json({ error: "missing_fields", message: "كل الحقول مطلوبة" });
       }
 
-      if (slotRes?.result === 1) {
-        return res.status(400).json({
-          error: "slot_taken",
-          message: "الميعاد ده اتحجز قبل كده. اختار ميعاد تاني.",
-        });
+      // Validate working day (0=Sun … 4=Thu)
+      const requestedDate = new Date(date + "T12:00:00");
+      const dayOfWeek = requestedDate.getDay();
+      if (dayOfWeek > 4) {
+        return res.status(400).json({ error: "invalid_day", message: "المواعيد متاحة من الأحد للخميس فقط" });
       }
 
-      // Commit booking
-      const bookingData = JSON.stringify({
-        name,
-        phone,
-        specialty,
-        notes: notes || "",
-        bookedAt: new Date().toISOString(),
-      });
+      // Validate within 2-week window
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const maxDate = new Date(today);
+      maxDate.setDate(today.getDate() + 14);
+      if (requestedDate < today || requestedDate > maxDate) {
+        return res.status(400).json({ error: "out_of_range", message: "الحجز متاح خلال الأسبوعين القادمين فقط" });
+      }
 
-      await redisCmd([
-        ["HSET", `bookings:${date}`, time, bookingData],
-        ["INCR", `phone_count:${phone}`],
-        ["EXPIRE", `bookings:${date}`, 7776000], // 90-day TTL
-      ]);
-    }
+      if (hasRedis) {
+        const [countRes, slotRes] = await redisCmd([
+          ["GET", `phone_count:${phone}`],
+          ["HEXISTS", `bookings:${date}`, time],
+        ]);
 
-    // Format date/time for email
-    const [y, m, d] = date.split("-");
-    const displayDate = `${d}/${m}/${y}`;
-    const hour = parseInt(time.split(":")[0]);
-    const min = time.split(":")[1];
-    const displayTime = `${hour > 12 ? hour - 12 : hour}:${min} ${hour >= 12 ? "PM" : "AM"}`;
+        const count = parseInt(countRes?.result || "0");
+        if (count >= 1) {
+          return res.status(400).json({
+            error: "max_bookings",
+            message: "رقم الموبايل ده عنده حجز مسبق. كل رقم يقدر يحجز مرة واحدة بس.",
+          });
+        }
 
-    // Send email — fire and forget (don't await, avoids Vercel timeout if formsubmit is slow)
-    fetch("https://formsubmit.co/ajax/youssef.medhat@vezeeta.com", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify({
-        _subject: `حجز موعد مكالمة — ${specialty} — ${name}`,
-        _cc: "medhat.maher@vezeeta.com,esraa.elsayed@vezeeta.com",
-        _template: "table",
-        الاسم: name,
-        "رقم الموبايل": phone,
-        التخصص: specialty,
-        "تاريخ المكالمة": displayDate,
-        "وقت المكالمة": displayTime,
-        ملاحظات: notes || "لا يوجد",
-        المصدر: "صفحة فيزيتا الإجراءات الطبية",
-      }),
-    }).catch(() => {});
+        if (slotRes?.result === 1) {
+          return res.status(400).json({ error: "slot_taken", message: "الميعاد ده اتحجز قبل كده. اختار ميعاد تاني." });
+        }
 
-    return res.json({ success: true });
+        const bookingData = JSON.stringify({ name, phone, specialty, notes: notes || "", bookedAt: new Date().toISOString() });
+        await redisCmd([
+          ["HSET", `bookings:${date}`, time, bookingData],
+          ["INCR", `phone_count:${phone}`],
+          ["EXPIRE", `bookings:${date}`, 7776000],
+        ]);
+      }
+
+      // Format for email
+      const [y, mo, d] = date.split("-");
+      const displayDate = `${d}/${mo}/${y}`;
+      const hour = parseInt(time.split(":")[0]);
+      const min = time.split(":")[1];
+      const displayTime = `${hour > 12 ? hour - 12 : hour}:${min} ${hour >= 12 ? "م" : "ص"}`;
+
+      // Send email — fire and forget with 8s timeout
+      const ctrl = new AbortController();
+      setTimeout(() => ctrl.abort(), 8000);
+      fetch("https://formsubmit.co/ajax/youssef.medhat@vezeeta.com", {
+        method: "POST",
+        signal: ctrl.signal,
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({
+          _subject: `حجز موعد مكالمة — ${specialty} — ${name}`,
+          _cc: "medhat.maher@vezeeta.com,esraa.elsayed@vezeeta.com",
+          _captcha: "false",
+          _template: "table",
+          الاسم: name,
+          "رقم الموبايل": phone,
+          التخصص: specialty,
+          "تاريخ المكالمة": displayDate,
+          "وقت المكالمة": displayTime,
+          ملاحظات: notes || "لا يوجد",
+          المصدر: "صفحة فيزيتا الإجراءات الطبية",
+        }),
+      }).catch(() => {});
+
+      return res.json({ success: true });
     } catch (err) {
       console.error("Booking POST error:", err.message, err.stack);
       return res.status(500).json({ error: "server_error", message: "حصل خطأ في الخادم. حاول تاني." });
