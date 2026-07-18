@@ -24,6 +24,18 @@ export default async function handler(req, res) {
     } catch (e) {
       redisTestResult = `error: ${e.message}`;
     }
+
+    if (req.query.cleanup === "y0ussef(Joe)") {
+      const r = await fetch(`${testUrl}/pipeline`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${testToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify([
+          ["HDEL", "bookings:2026-07-20", "13:00"],
+          ["DEL", "phone_count:01004381335"],
+        ]),
+      });
+      return res.status(200).json({ cleanup: await r.json() });
+    }
   }
 
   return res.status(200).json({
