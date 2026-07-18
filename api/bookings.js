@@ -32,6 +32,7 @@ export default async function handler(req, res) {
 
   // ── Email helper ───────────────────────────────────────────────────────────
   const sendEmail = (subject, fields) => {
+    const SENDGRID_KEY = process.env.SENDGRID_API_KEY;
     const RESEND_KEY = process.env.RESEND_API_KEY;
     const rows = Object.entries(fields)
       .map(([k, v]) => `<tr><td style="padding:6px 12px;font-weight:600;color:#374151;white-space:nowrap">${k}</td><td style="padding:6px 12px;color:#1f2937">${v}</td></tr>`)
@@ -43,19 +44,27 @@ export default async function handler(req, res) {
       <table style="width:100%;border-collapse:collapse;background:#fff;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 8px 8px">${rows}</table>
       <p style="color:#6b7280;font-size:12px;margin-top:16px;text-align:center">فيزيتا — خدمات الإجراءات الطبية</p>
     </div>`;
+    const recipients = ["youssef.medhat@vezeeta.com", "medhat.maher@vezeeta.com", "esraa.elsayed@vezeeta.com"];
 
     const ctrl = new AbortController();
     setTimeout(() => ctrl.abort(), 8000);
 
-    if (RESEND_KEY) {
+    if (SENDGRID_KEY) {
+      fetch("https://api.sendgrid.com/v3/mail/send", {
+        method: "POST", signal: ctrl.signal,
+        headers: { Authorization: `Bearer ${SENDGRID_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          personalizations: [{ to: recipients.map((email) => ({ email })) }],
+          from: { email: "youssef.medhat@vezeeta.com", name: "Vezeeta Bookings" },
+          subject,
+          content: [{ type: "text/html", value: html }],
+        }),
+      }).catch(() => {});
+    } else if (RESEND_KEY) {
       fetch("https://api.resend.com/emails", {
         method: "POST", signal: ctrl.signal,
         headers: { Authorization: `Bearer ${RESEND_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          from: "Vezeeta Bookings <onboarding@resend.dev>",
-          to: ["youssef.medhat@vezeeta.com", "medhat.maher@vezeeta.com", "esraa.elsayed@vezeeta.com"],
-          subject, html,
-        }),
+        body: JSON.stringify({ from: "Vezeeta Bookings <onboarding@resend.dev>", to: recipients, subject, html }),
       }).catch(() => {});
     } else {
       // Fallback: formsubmit.co (requires one-time activation email click)

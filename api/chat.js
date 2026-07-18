@@ -113,15 +113,29 @@ export default async function handler(req, res) {
     const emailFields = { الاسم: name, "رقم الموبايل": phone, التخصص: specialty, "تاريخ المكالمة": displayDate, "وقت المكالمة": displayTime, ملاحظات: notes || "لا يوجد", المصدر: "كريم — مساعد الدعم الذكي" };
     const emailCtrl = new AbortController();
     setTimeout(() => emailCtrl.abort(), 8000);
+    const SENDGRID_KEY = process.env.SENDGRID_API_KEY;
     const RESEND_KEY = process.env.RESEND_API_KEY;
-    if (RESEND_KEY) {
+    const recipients = ["youssef.medhat@vezeeta.com", "medhat.maher@vezeeta.com", "esraa.elsayed@vezeeta.com"];
+    if (SENDGRID_KEY) {
+      const rows = Object.entries(emailFields).map(([k,v]) => `<tr><td style="padding:6px 12px;font-weight:600">${k}</td><td style="padding:6px 12px">${v}</td></tr>`).join("");
+      fetch("https://api.sendgrid.com/v3/mail/send", {
+        method: "POST", signal: emailCtrl.signal,
+        headers: { Authorization: `Bearer ${SENDGRID_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          personalizations: [{ to: recipients.map((email) => ({ email })) }],
+          from: { email: "youssef.medhat@vezeeta.com", name: "Vezeeta Bookings" },
+          subject,
+          content: [{ type: "text/html", value: `<div style="direction:rtl;font-family:Arial,sans-serif"><table style="border-collapse:collapse;width:100%">${rows}</table></div>` }],
+        }),
+      }).catch(() => {});
+    } else if (RESEND_KEY) {
       const rows = Object.entries(emailFields).map(([k,v]) => `<tr><td style="padding:6px 12px;font-weight:600">${k}</td><td style="padding:6px 12px">${v}</td></tr>`).join("");
       fetch("https://api.resend.com/emails", {
         method: "POST", signal: emailCtrl.signal,
         headers: { Authorization: `Bearer ${RESEND_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           from: "Vezeeta Bookings <onboarding@resend.dev>",
-          to: ["youssef.medhat@vezeeta.com", "medhat.maher@vezeeta.com", "esraa.elsayed@vezeeta.com"],
+          to: recipients,
           subject,
           html: `<div style="direction:rtl;font-family:Arial,sans-serif"><table style="border-collapse:collapse;width:100%">${rows}</table></div>`,
         }),
