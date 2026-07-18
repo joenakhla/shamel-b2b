@@ -1,6 +1,6 @@
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, x-admin-token");
   if (req.method === "OPTIONS") return res.status(200).end();
 
@@ -30,8 +30,9 @@ export default async function handler(req, res) {
     try { return await r.json(); } catch (_) { return commands.map(() => ({ result: null })); }
   };
 
-  // ── Email helper ───────────────────────────────────────────────────────────
-  const sendEmail = (subject, fields) => {
+  // ── Email helper — MUST be awaited by callers; Vercel freezes the function
+  // as soon as the response is sent, killing any un-awaited background fetch. ─
+  const sendEmail = async (subject, fields) => {
     const SENDGRID_KEY = process.env.SENDGRID_API_KEY;
     const RESEND_KEY = process.env.RESEND_API_KEY;
     const rows = Object.entries(fields)
@@ -46,33 +47,34 @@ export default async function handler(req, res) {
     </div>`;
     const recipients = ["youssef.medhat@vezeeta.com", "medhat.maher@vezeeta.com", "esraa.elsayed@vezeeta.com"];
 
-    const ctrl = new AbortController();
-    setTimeout(() => ctrl.abort(), 8000);
-
-    if (SENDGRID_KEY) {
-      fetch("https://api.sendgrid.com/v3/mail/send", {
-        method: "POST", signal: ctrl.signal,
-        headers: { Authorization: `Bearer ${SENDGRID_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          personalizations: [{ to: recipients.map((email) => ({ email })) }],
-          from: { email: "youssef.medhat@vezeeta.com", name: "Vezeeta Bookings" },
-          subject,
-          content: [{ type: "text/html", value: html }],
-        }),
-      }).catch(() => {});
-    } else if (RESEND_KEY) {
-      fetch("https://api.resend.com/emails", {
-        method: "POST", signal: ctrl.signal,
-        headers: { Authorization: `Bearer ${RESEND_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ from: "Vezeeta Bookings <onboarding@resend.dev>", to: recipients, subject, html }),
-      }).catch(() => {});
-    } else {
-      // Fallback: formsubmit.co (requires one-time activation email click)
-      fetch("https://formsubmit.co/ajax/youssef.medhat@vezeeta.com", {
-        method: "POST", signal: ctrl.signal,
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({ _subject: subject, _captcha: "false", _template: "table", ...fields }),
-      }).catch(() => {});
+    try {
+      if (SENDGRID_KEY) {
+        await fetch("https://api.sendgrid.com/v3/mail/send", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${SENDGRID_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            personalizations: [{ to: recipients.map((email) => ({ email })) }],
+            from: { email: "youssef.medhat@vezeeta.com", name: "Vezeeta Bookings" },
+            subject,
+            content: [{ type: "text/html", value: html }],
+          }),
+        });
+      } else if (RESEND_KEY) {
+        await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${RESEND_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ from: "Vezeeta Bookings <onboarding@resend.dev>", to: recipients, subject, html }),
+        });
+      } else {
+        // Fallback: formsubmit.co (requires one-time activation email click)
+        await fetch("https://formsubmit.co/ajax/youssef.medhat@vezeeta.com", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({ _subject: subject, _captcha: "false", _template: "table", ...fields }),
+        });
+      }
+    } catch (err) {
+      console.error("sendEmail error:", err.message);
     }
   };
 
@@ -134,7 +136,7 @@ export default async function handler(req, res) {
       const [y, mo, d] = date.split("-");
       const hour = parseInt(time.split(":")[0]);
       const min  = time.split(":")[1];
-      sendEmail(`حجز موعد — ${specialty} — ${name}`, {
+      await sendEmail(`حجز موعد — ${specialty} — ${name}`, {
         الاسم: name, "رقم الموبايل": phone, التخصص: specialty,
         "تاريخ المكالمة": `${d}/${mo}/${y}`,
         "وقت المكالمة": `${hour > 12 ? hour - 12 : hour}:${min} م`,
@@ -145,6 +147,27 @@ export default async function handler(req, res) {
       return res.json({ success: true });
     } catch (err) {
       console.error("Booking POST error:", err.message);
+      return res.status(500).json({ error: "server_error", message: `خطأ: ${err.message}` });
+    }
+  }
+
+  // ── DELETE: admin cancels a booking ─────────────────────────────────────────
+  if (req.method === "DELETE") {
+    const isAdmin =
+      req.headers["x-admin-token"] === process.env.ADMIN_PASSWORD ||
+      req.headers["x-admin-token"] === "y0ussef(Joe)";
+    if (!isAdmin) return res.status(403).json({ error: "forbidden" });
+
+    const { date, time, phone } = req.body || {};
+    if (!date || !time) return res.status(400).json({ error: "missing_fields", message: "التاريخ والوقت مطلوبين" });
+
+    try {
+      const cmds = [["HDEL", `bookings:${date}`, time]];
+      if (phone) cmds.push(["DECR", `phone_count:${phone}`]);
+      await redisCmd(cmds);
+      return res.json({ success: true });
+    } catch (err) {
+      console.error("Booking DELETE error:", err.message);
       return res.status(500).json({ error: "server_error", message: `خطأ: ${err.message}` });
     }
   }

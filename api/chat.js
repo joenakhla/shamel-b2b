@@ -105,47 +105,50 @@ export default async function handler(req, res) {
       ]);
     }
 
-    // Email — fire and forget
+    // Email — MUST be awaited; Vercel freezes the function once the response
+    // is sent, killing any un-awaited background fetch.
     const [y, m, d] = date.split("-");
     const displayDate = `${d}/${m}/${y}`;
     const displayTime = fmtTime(time);
     const subject = `حجز موعد (كريم) — ${specialty} — ${name}`;
     const emailFields = { الاسم: name, "رقم الموبايل": phone, التخصص: specialty, "تاريخ المكالمة": displayDate, "وقت المكالمة": displayTime, ملاحظات: notes || "لا يوجد", المصدر: "كريم — مساعد الدعم الذكي" };
-    const emailCtrl = new AbortController();
-    setTimeout(() => emailCtrl.abort(), 8000);
     const SENDGRID_KEY = process.env.SENDGRID_API_KEY;
     const RESEND_KEY = process.env.RESEND_API_KEY;
     const recipients = ["youssef.medhat@vezeeta.com", "medhat.maher@vezeeta.com", "esraa.elsayed@vezeeta.com"];
-    if (SENDGRID_KEY) {
-      const rows = Object.entries(emailFields).map(([k,v]) => `<tr><td style="padding:6px 12px;font-weight:600">${k}</td><td style="padding:6px 12px">${v}</td></tr>`).join("");
-      fetch("https://api.sendgrid.com/v3/mail/send", {
-        method: "POST", signal: emailCtrl.signal,
-        headers: { Authorization: `Bearer ${SENDGRID_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          personalizations: [{ to: recipients.map((email) => ({ email })) }],
-          from: { email: "youssef.medhat@vezeeta.com", name: "Vezeeta Bookings" },
-          subject,
-          content: [{ type: "text/html", value: `<div style="direction:rtl;font-family:Arial,sans-serif"><table style="border-collapse:collapse;width:100%">${rows}</table></div>` }],
-        }),
-      }).catch(() => {});
-    } else if (RESEND_KEY) {
-      const rows = Object.entries(emailFields).map(([k,v]) => `<tr><td style="padding:6px 12px;font-weight:600">${k}</td><td style="padding:6px 12px">${v}</td></tr>`).join("");
-      fetch("https://api.resend.com/emails", {
-        method: "POST", signal: emailCtrl.signal,
-        headers: { Authorization: `Bearer ${RESEND_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          from: "Vezeeta Bookings <onboarding@resend.dev>",
-          to: recipients,
-          subject,
-          html: `<div style="direction:rtl;font-family:Arial,sans-serif"><table style="border-collapse:collapse;width:100%">${rows}</table></div>`,
-        }),
-      }).catch(() => {});
-    } else {
-      fetch("https://formsubmit.co/ajax/youssef.medhat@vezeeta.com", {
-        method: "POST", signal: emailCtrl.signal,
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({ _subject: subject, _captcha: "false", _template: "table", ...emailFields }),
-      }).catch(() => {});
+    try {
+      if (SENDGRID_KEY) {
+        const rows = Object.entries(emailFields).map(([k,v]) => `<tr><td style="padding:6px 12px;font-weight:600">${k}</td><td style="padding:6px 12px">${v}</td></tr>`).join("");
+        await fetch("https://api.sendgrid.com/v3/mail/send", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${SENDGRID_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            personalizations: [{ to: recipients.map((email) => ({ email })) }],
+            from: { email: "youssef.medhat@vezeeta.com", name: "Vezeeta Bookings" },
+            subject,
+            content: [{ type: "text/html", value: `<div style="direction:rtl;font-family:Arial,sans-serif"><table style="border-collapse:collapse;width:100%">${rows}</table></div>` }],
+          }),
+        });
+      } else if (RESEND_KEY) {
+        const rows = Object.entries(emailFields).map(([k,v]) => `<tr><td style="padding:6px 12px;font-weight:600">${k}</td><td style="padding:6px 12px">${v}</td></tr>`).join("");
+        await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${RESEND_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            from: "Vezeeta Bookings <onboarding@resend.dev>",
+            to: recipients,
+            subject,
+            html: `<div style="direction:rtl;font-family:Arial,sans-serif"><table style="border-collapse:collapse;width:100%">${rows}</table></div>`,
+          }),
+        });
+      } else {
+        await fetch("https://formsubmit.co/ajax/youssef.medhat@vezeeta.com", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({ _subject: subject, _captcha: "false", _template: "table", ...emailFields }),
+        });
+      }
+    } catch (err) {
+      console.error("Kareem sendEmail error:", err.message);
     }
 
     return { success: true, name, phone, specialty, date, time, displayDate, displayTime };

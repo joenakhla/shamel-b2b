@@ -89,6 +89,21 @@ export default function AdminPanel() {
     setSurgLoading(false);
   };
 
+  const [cancelingSlot, setCancelingSlot] = useState(null);
+  const cancelBooking = async (slot, booking) => {
+    if (!window.confirm(`تأكيد إلغاء حجز ${booking.name} الساعة ${formatTimeAr(slot)}؟`)) return;
+    setCancelingSlot(slot);
+    try {
+      await fetch("/api/bookings", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json", "x-admin-token": ADMIN_TOKEN },
+        body: JSON.stringify({ date: surgDate, time: slot, phone: booking.phone }),
+      });
+      await fetchSurgical(surgDate);
+    } catch (_) {}
+    setCancelingSlot(null);
+  };
+
   const fetchLeads = async () => {
     setLeadsLoading(true);
     try {
@@ -235,6 +250,12 @@ export default function AdminPanel() {
                             <div style={{ fontSize:13, color:C.slate, marginTop:2 }}>{b.specialty}</div>
                           </div>
                           <div style={{ fontSize:14, color:C.slate, direction:"ltr", fontWeight:600 }}>📱 {b.phone}</div>
+                          <button
+                            onClick={() => cancelBooking(slot, b)}
+                            disabled={cancelingSlot === slot}
+                            style={{ background:"#FEE2E2", color:"#991B1B", border:"none", borderRadius:8, padding:"6px 14px", fontSize:13, fontWeight:700, cursor:cancelingSlot===slot?"default":"pointer", flexShrink:0, opacity:cancelingSlot===slot?0.6:1 }}>
+                            {cancelingSlot === slot ? "جاري الإلغاء..." : "✕ إلغاء الحجز"}
+                          </button>
                           {b.notes && <div style={{ width:"100%", fontSize:12, color:"#94A3B8", background:C.surface, borderRadius:8, padding:"6px 10px" }}>📝 {b.notes}</div>}
                           {b.bookedAt && <div style={{ fontSize:11, color:"#94A3B8", width:"100%", marginTop:-4 }}>حُجز في: {formatTs(b.bookedAt)}</div>}
                         </>
