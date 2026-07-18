@@ -1,11 +1,13 @@
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-  let REDIS_URL = process.env.UPSTASH_REDIS_REST_URL || "";
-  const REDIS_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || "";
+  let REDIS_URL   = process.env.UPSTASH_REDIS_REST_URL   || "";
+  let REDIS_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || "";
   if (REDIS_URL.startsWith("redis://") || REDIS_URL.startsWith("rediss://")) {
-    const m = REDIS_URL.match(/@([^:/]+)/);
-    if (m) REDIS_URL = `https://${m[1]}`;
+    const hostM  = REDIS_URL.match(/@([^:/]+)/);
+    const tokenM = REDIS_URL.match(/\/\/[^:]+:([^@]+)@/);
+    if (hostM)  REDIS_URL   = `https://${hostM[1]}`;
+    if (tokenM && !REDIS_TOKEN) REDIS_TOKEN = tokenM[1];
   }
   const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
   if (!ANTHROPIC_API_KEY) return res.status(500).json({ error: "ANTHROPIC_API_KEY not configured" });
@@ -105,22 +107,30 @@ export default async function handler(req, res) {
     const [y, m, d] = date.split("-");
     const displayDate = `${d}/${m}/${y}`;
     const displayTime = fmtTime(time);
-    fetch("https://formsubmit.co/ajax/youssef.medhat@vezeeta.com", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify({
-        _subject: `حجز موعد (كريم) — ${specialty} — ${name}`,
-        _cc: "medhat.maher@vezeeta.com,esraa.elsayed@vezeeta.com",
-        _template: "table",
-        الاسم: name,
-        "رقم الموبايل": phone,
-        التخصص: specialty,
-        "تاريخ المكالمة": displayDate,
-        "وقت المكالمة": displayTime,
-        ملاحظات: notes || "لا يوجد",
-        المصدر: "كريم — مساعد الدعم الذكي",
-      }),
-    }).catch(() => {});
+    const subject = `حجز موعد (كريم) — ${specialty} — ${name}`;
+    const emailFields = { الاسم: name, "رقم الموبايل": phone, التخصص: specialty, "تاريخ المكالمة": displayDate, "وقت المكالمة": displayTime, ملاحظات: notes || "لا يوجد", المصدر: "كريم — مساعد الدعم الذكي" };
+    const emailCtrl = new AbortController();
+    setTimeout(() => emailCtrl.abort(), 8000);
+    const RESEND_KEY = process.env.RESEND_API_KEY;
+    if (RESEND_KEY) {
+      const rows = Object.entries(emailFields).map(([k,v]) => `<tr><td style="padding:6px 12px;font-weight:600">${k}</td><td style="padding:6px 12px">${v}</td></tr>`).join("");
+      fetch("https://api.resend.com/emails", {
+        method: "POST", signal: emailCtrl.signal,
+        headers: { Authorization: `Bearer ${RESEND_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          from: "Vezeeta Bookings <bookings@vezeeta.com>",
+          to: ["youssef.medhat@vezeeta.com", "medhat.maher@vezeeta.com", "esraa.elsayed@vezeeta.com"],
+          subject,
+          html: `<div style="direction:rtl;font-family:Arial,sans-serif"><table style="border-collapse:collapse;width:100%">${rows}</table></div>`,
+        }),
+      }).catch(() => {});
+    } else {
+      fetch("https://formsubmit.co/ajax/youssef.medhat@vezeeta.com", {
+        method: "POST", signal: emailCtrl.signal,
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ _subject: subject, _captcha: "false", _template: "table", ...emailFields }),
+      }).catch(() => {});
+    }
 
     return { success: true, name, phone, specialty, date, time, displayDate, displayTime };
   };
