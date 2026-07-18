@@ -248,6 +248,7 @@ export default function AdminPanel() {
                           <div style={{ flex:1, minWidth:0 }}>
                             <div style={{ fontSize:15, fontWeight:700, color:C.charcoal }}>{b.name}</div>
                             <div style={{ fontSize:13, color:C.slate, marginTop:2 }}>{b.specialty}</div>
+                            {b.companyName && <div style={{ fontSize:12, color:C.primary, fontWeight:700, marginTop:2 }}>🏢 {b.companyName}</div>}
                           </div>
                           <div style={{ fontSize:14, color:C.slate, direction:"ltr", fontWeight:600 }}>📱 {b.phone}</div>
                           <button

@@ -79,7 +79,7 @@ export default async function handler(req, res) {
   };
 
   // ── Tool: make_booking ────────────────────────────────────────────────────
-  const makeBooking = async ({ name, phone, specialty, date, time, notes }) => {
+  const makeBooking = async ({ name, phone, specialty, date, time, notes, companyName }) => {
     const normalizedTime = normalizeTime(time);
     if (!isWorkingDay(date)) return { success: false, error: "يوم غير صحيح" };
     if (!TIME_SLOTS.includes(normalizedTime)) return { success: false, error: `وقت غير صحيح "${time}" → "${normalizedTime}" — الأوقات المتاحة: ${TIME_SLOTS.join(", ")}` };
@@ -95,7 +95,7 @@ export default async function handler(req, res) {
       if (slotRes?.result === 1) return { success: false, error: "الميعاد ده اتحجز. اختار وقت تاني." };
 
       const bookingData = JSON.stringify({
-        name, phone, specialty, notes: notes || "",
+        name, phone, specialty, notes: notes || "", companyName: companyName || "",
         bookedAt: new Date().toISOString(),
       });
       await redisCmd([
@@ -111,7 +111,12 @@ export default async function handler(req, res) {
     const displayDate = `${d}/${m}/${y}`;
     const displayTime = fmtTime(time);
     const subject = `حجز موعد (كريم) — ${specialty} — ${name}`;
-    const emailFields = { الاسم: name, "رقم الموبايل": phone, التخصص: specialty, "تاريخ المكالمة": displayDate, "وقت المكالمة": displayTime, ملاحظات: notes || "لا يوجد", المصدر: "كريم — مساعد الدعم الذكي" };
+    const emailFields = {
+      الاسم: name, "رقم الموبايل": phone, التخصص: specialty,
+      ...(companyName ? { "اسم الشركة": companyName } : {}),
+      "تاريخ المكالمة": displayDate, "وقت المكالمة": displayTime,
+      ملاحظات: notes || "لا يوجد", المصدر: "كريم — مساعد الدعم الذكي",
+    };
     const SENDGRID_KEY = process.env.SENDGRID_API_KEY;
     const RESEND_KEY = process.env.RESEND_API_KEY;
     const recipients = ["youssef.medhat@vezeeta.com", "medhat.maher@vezeeta.com", "esraa.elsayed@vezeeta.com"];
@@ -172,9 +177,10 @@ export default async function handler(req, res) {
 ٣. استخدم check_availability عشان تشوف المواعيد المتاحة في اليوم ده
 ٤. اعرض المواعيد المتاحة واطلب منه يختار
 ٥. اسأل عن اسمه الكامل ورقم موبايله
-٦. لو فيه ملاحظات على الحالة، اسأل عنها (اختياري)
-٧. استخدم make_booking لتأكيد الحجز
-٨. أكّدله الحجز بالتفاصيل الكاملة
+٦. اسأل لو عنده حساب شامل كوربوريت (من خلال شركته) — لو أيوه، اسأل عن اسم الشركة (اختياري تماماً، متضغطش عليه لو مش عايز يجاوب)
+٧. لو فيه ملاحظات على الحالة، اسأل عنها (اختياري)
+٨. استخدم make_booking لتأكيد الحجز
+٩. أكّدله الحجز بالتفاصيل الكاملة
 
 📌 قواعد مهمة:
 - لو المريض اختار يوم جمعة أو سبت، قوله إنه يوم عطلة وساعده يختار يوم تاني
@@ -215,6 +221,7 @@ export default async function handler(req, res) {
           date:      { type: "string", description: "التاريخ YYYY-MM-DD" },
           time:      { type: "string", description: "الوقت بصيغة 24h مثل 13:00 أو 14:30" },
           notes:     { type: "string", description: "ملاحظات إضافية عن الحالة (اختياري)" },
+          companyName: { type: "string", description: "اسم الشركة لو المريض عنده حساب شامل كوربوريت (اختياري)" },
         },
         required: ["name", "phone", "specialty", "date", "time"],
       },

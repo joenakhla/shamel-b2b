@@ -101,7 +101,7 @@ export default async function handler(req, res) {
   // ── POST: book a slot ──────────────────────────────────────────────────────
   if (req.method === "POST") {
     try {
-      const { date, time, name, phone, specialty, notes } = req.body || {};
+      const { date, time, name, phone, specialty, notes, companyName } = req.body || {};
 
       if (!date || !time || !name || !phone || !specialty)
         return res.status(400).json({ error: "missing_fields", message: "كل الحقول مطلوبة" });
@@ -126,7 +126,7 @@ export default async function handler(req, res) {
           return res.status(400).json({ error: "slot_taken", message: "الميعاد ده اتحجز قبل كده. اختار ميعاد تاني." });
 
         await redisCmd([
-          ["HSET",   `bookings:${date}`, time, JSON.stringify({ name, phone, specialty, notes: notes || "", bookedAt: new Date().toISOString() })],
+          ["HSET",   `bookings:${date}`, time, JSON.stringify({ name, phone, specialty, notes: notes || "", companyName: companyName || "", bookedAt: new Date().toISOString() })],
           ["INCR",   `phone_count:${phone}`],
           ["EXPIRE", `bookings:${date}`, 7776000],
           ["EXPIRE", `phone_count:${phone}`, 7776000],
@@ -138,6 +138,7 @@ export default async function handler(req, res) {
       const min  = time.split(":")[1];
       await sendEmail(`حجز موعد — ${specialty} — ${name}`, {
         الاسم: name, "رقم الموبايل": phone, التخصص: specialty,
+        ...(companyName ? { "اسم الشركة": companyName } : {}),
         "تاريخ المكالمة": `${d}/${mo}/${y}`,
         "وقت المكالمة": `${hour > 12 ? hour - 12 : hour}:${min} م`,
         ملاحظات: notes || "لا يوجد",

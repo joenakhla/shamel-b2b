@@ -101,7 +101,7 @@ export default function VezeetaSurgical() {
   const [faqOpen, setFaqOpen]                     = useState(null);
 
   // Form state
-  const [formData, setFormData]       = useState({ name:"", phone:"", specialty:"", date:"", time:"", notes:"" });
+  const [formData, setFormData]       = useState({ name:"", phone:"", specialty:"", companyName:"", date:"", time:"", notes:"" });
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
   const [bookingError, setBookingError] = useState("");
@@ -532,6 +532,16 @@ export default function VezeetaSurgical() {
                       <option value="">اختر التخصص...</option>
                       {SERVICES.map((s) => <option key={s.name} value={s.name}>{s.icon} {s.name}</option>)}
                     </select>
+                  </div>
+
+                  {/* Company (optional — Shamel corporate accounts) */}
+                  <div style={{ marginBottom:16 }}>
+                    <label style={{ fontSize:13, fontWeight:700, color:C.charcoal, display:"block", marginBottom:6 }}>
+                      اسم الشركة <span style={{ fontSize:11, color:C.gray, fontWeight:400 }}>(اختياري — لو عندك حساب شامل)</span>
+                    </label>
+                    <input type="text" placeholder="مثال: فيزيتا مصر" value={formData.companyName}
+                      onChange={(e) => setFormData((f) => ({ ...f, companyName:e.target.value }))}
+                      style={inputStyle} />
                   </div>
 
                   {/* Date */}
