@@ -1,16 +1,20 @@
 import { Routes, Route } from "react-router-dom"
+import { SpeedInsights } from "@vercel/speed-insights/react"
 import ShamelB2B from "./ShamelB2B.jsx"
 import VezeetaSurgical from "./VezeetaSurgical.jsx"
 import AdminPanel from "./AdminPanel.jsx"
 
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<ShamelB2B />} />
-      <Route path="/surgical" element={<VezeetaSurgical />} />
-      <Route path="/surgical/*" element={<VezeetaSurgical />} />
-      <Route path="/admin" element={<AdminPanel />} />
-    </Routes>
+    <>
+      <Routes>
+        <Route path="/" element={<ShamelB2B />} />
+        <Route path="/surgical" element={<VezeetaSurgical />} />
+        <Route path="/surgical/*" element={<VezeetaSurgical />} />
+        <Route path="/admin" element={<AdminPanel />} />
+      </Routes>
+      <SpeedInsights />
+    </>
   )
 }
 
