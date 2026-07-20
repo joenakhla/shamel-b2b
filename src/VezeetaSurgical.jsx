@@ -288,6 +288,8 @@ export default function VezeetaSurgical() {
         .pulse-btn { animation:pulse 2.5s ease-in-out infinite; }
         @media(max-width:768px){
           .hero-title { font-size:32px !important; }
+          .hero-cols { grid-template-columns:1fr !important; }
+          .hero-quick-form { order:-1; }
           .form-cols { flex-direction:column !important; }
           .services-grid { grid-template-columns:1fr 1fr !important; }
           .steps-grid { grid-template-columns:1fr 1fr !important; }
@@ -327,61 +329,110 @@ export default function VezeetaSurgical() {
         padding:"64px 24px 80px", position:"relative", overflow:"hidden",
       }}>
         <div style={{ position:"absolute", top:-120, left:-80, width:400, height:400, borderRadius:"50%", background:`radial-gradient(circle,rgba(89,154,215,0.08),transparent)`, pointerEvents:"none" }} />
-        <div style={{ maxWidth:860, margin:"0 auto", textAlign:"center" }} className="fade-up">
-          <div style={{ display:"inline-flex", alignItems:"center", gap:8, marginBottom:24, background:C.accentLight, borderRadius:100, padding:"6px 16px" }}>
-            <span style={{ width:8, height:8, borderRadius:"50%", background:C.accent, display:"inline-block" }} />
-            <span style={{ fontSize:14, fontWeight:600, color:C.accent }}>استشارة أولى مجانية — من غير أي التزام</span>
-          </div>
-          <h1 className="hero-title" style={{ fontSize:48, fontWeight:900, lineHeight:1.3, marginBottom:20 }}>
-            <span style={{ color:C.charcoal }}>من الاستشارة للتعافي</span><br />
-            <span style={{ color:C.primary }}>إحنا معاك في كل خطوة</span>
-          </h1>
-          <p style={{ fontSize:18, color:C.slate, lineHeight:1.9, maxWidth:600, margin:"0 auto 40px" }}>
-            نوصّلك بأفضل المتخصصين والمستشفيات اللي تناسب حالتك،<br />نتابع معاك كل التفاصيل — وانت اللي بتقرر
-          </p>
+        <div className="hero-cols" style={{ maxWidth:1180, margin:"0 auto", display:"grid", gridTemplateColumns:"1.15fr 400px", gap:48, alignItems:"start" }}>
 
-          {/* Search bar */}
-          <div ref={searchRef} style={{ position:"relative", maxWidth:600, margin:"0 auto 24px" }}>
-            <div style={{ display:"flex", borderRadius:16, overflow:"hidden", boxShadow:`0 4px 24px rgba(89,154,215,0.15)`, border:`1.5px solid ${C.border}`, background:C.white }}>
-              <input
-                type="text" placeholder="ابحث عن التخصص أو الإجراء اللي تحتاجه..."
-                value={searchQuery} onChange={(e) => handleSearch(e.target.value)}
-                onFocus={() => searchQuery && setShowDropdown(true)}
-                style={{ flex:1, padding:"16px 20px", border:"none", outline:"none", fontSize:16, fontFamily:font, direction:"rtl", background:"transparent", color:C.charcoal }}
-              />
-              <button onClick={() => searchResults.length && selectService(searchResults[0])}
-                style={{ background:`linear-gradient(135deg,${C.primary},${C.primaryDark})`, color:"#fff", border:"none", padding:"0 28px", fontSize:16, fontWeight:700, cursor:"pointer", fontFamily:font, flexShrink:0 }}>
-                ابحث
-              </button>
+          {/* Right: existing hero content */}
+          <div className="fade-up" style={{ textAlign:"center" }}>
+            <div style={{ display:"inline-flex", alignItems:"center", gap:8, marginBottom:24, background:C.accentLight, borderRadius:100, padding:"6px 16px" }}>
+              <span style={{ width:8, height:8, borderRadius:"50%", background:C.accent, display:"inline-block" }} />
+              <span style={{ fontSize:14, fontWeight:600, color:C.accent }}>استشارة أولى مجانية — من غير أي التزام</span>
             </div>
-            {showDropdown && searchResults.length > 0 && (
-              <div style={{ position:"absolute", top:"calc(100% + 8px)", right:0, left:0, zIndex:50, background:C.white, borderRadius:12, boxShadow:"0 8px 32px rgba(0,0,0,0.12)", border:`1px solid ${C.border}`, overflow:"hidden" }}>
-                {searchResults.map((svc, i) => (
-                  <div key={i} onClick={() => selectService(svc)}
-                    style={{ display:"flex", alignItems:"center", gap:12, padding:"14px 20px", cursor:"pointer", borderBottom: i < searchResults.length-1 ? `1px solid ${C.border}` : "none" }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = C.primarySubtle}
-                    onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}>
-                    <span style={{ fontSize:22 }}>{svc.icon}</span>
-                    <div>
-                      <div style={{ fontWeight:700, fontSize:14, color:C.charcoal }}>{svc.name}</div>
-                      <div style={{ fontSize:12, color:C.gray, marginTop:2 }}>{svc.sub}</div>
-                    </div>
-                  </div>
-                ))}
+            <h1 className="hero-title" style={{ fontSize:44, fontWeight:900, lineHeight:1.3, marginBottom:20 }}>
+              <span style={{ color:C.charcoal }}>من الاستشارة للتعافي</span><br />
+              <span style={{ color:C.primary }}>إحنا معاك في كل خطوة</span>
+            </h1>
+            <p style={{ fontSize:17, color:C.slate, lineHeight:1.9, maxWidth:560, margin:"0 auto 36px" }}>
+              نوصّلك بأفضل المتخصصين والمستشفيات اللي تناسب حالتك،<br />نتابع معاك كل التفاصيل — وانت اللي بتقرر
+            </p>
+
+            {/* Search bar */}
+            <div ref={searchRef} style={{ position:"relative", maxWidth:560, margin:"0 auto 24px" }}>
+              <div style={{ display:"flex", borderRadius:16, overflow:"hidden", boxShadow:`0 4px 24px rgba(89,154,215,0.15)`, border:`1.5px solid ${C.border}`, background:C.white }}>
+                <input
+                  type="text" placeholder="ابحث عن التخصص أو الإجراء اللي تحتاجه..."
+                  value={searchQuery} onChange={(e) => handleSearch(e.target.value)}
+                  onFocus={() => searchQuery && setShowDropdown(true)}
+                  style={{ flex:1, padding:"16px 20px", border:"none", outline:"none", fontSize:16, fontFamily:font, direction:"rtl", background:"transparent", color:C.charcoal }}
+                />
+                <button onClick={() => searchResults.length && selectService(searchResults[0])}
+                  style={{ background:`linear-gradient(135deg,${C.primary},${C.primaryDark})`, color:"#fff", border:"none", padding:"0 28px", fontSize:16, fontWeight:700, cursor:"pointer", fontFamily:font, flexShrink:0 }}>
+                  ابحث
+                </button>
               </div>
-            )}
+              {showDropdown && searchResults.length > 0 && (
+                <div style={{ position:"absolute", top:"calc(100% + 8px)", right:0, left:0, zIndex:50, background:C.white, borderRadius:12, boxShadow:"0 8px 32px rgba(0,0,0,0.12)", border:`1px solid ${C.border}`, overflow:"hidden" }}>
+                  {searchResults.map((svc, i) => (
+                    <div key={i} onClick={() => selectService(svc)}
+                      style={{ display:"flex", alignItems:"center", gap:12, padding:"14px 20px", cursor:"pointer", borderBottom: i < searchResults.length-1 ? `1px solid ${C.border}` : "none" }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = C.primarySubtle}
+                      onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}>
+                      <span style={{ fontSize:22 }}>{svc.icon}</span>
+                      <div>
+                        <div style={{ fontWeight:700, fontSize:14, color:C.charcoal }}>{svc.name}</div>
+                        <div style={{ fontSize:12, color:C.gray, marginTop:2 }}>{svc.sub}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Quick pills */}
+            <div style={{ display:"flex", gap:10, justifyContent:"center", flexWrap:"wrap" }}>
+              {QUICK_PILLS.map((p) => (
+                <button key={p.idx} onClick={() => selectPill(p.idx)}
+                  style={{ padding:"8px 20px", borderRadius:100, background:C.white, border:`1.5px solid ${C.border}`, fontSize:14, fontWeight:600, color:C.slate, cursor:"pointer", fontFamily:font, transition:"all 0.2s", boxShadow:"0 2px 8px rgba(0,0,0,0.04)" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor=C.primary; e.currentTarget.style.color=C.primary; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor=C.border; e.currentTarget.style.color=C.slate; }}>
+                  {p.label}
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* Quick pills */}
-          <div style={{ display:"flex", gap:10, justifyContent:"center", flexWrap:"wrap" }}>
-            {QUICK_PILLS.map((p) => (
-              <button key={p.idx} onClick={() => selectPill(p.idx)}
-                style={{ padding:"8px 20px", borderRadius:100, background:C.white, border:`1.5px solid ${C.border}`, fontSize:14, fontWeight:600, color:C.slate, cursor:"pointer", fontFamily:font, transition:"all 0.2s", boxShadow:"0 2px 8px rgba(0,0,0,0.04)" }}
-                onMouseEnter={(e) => { e.currentTarget.style.borderColor=C.primary; e.currentTarget.style.color=C.primary; }}
-                onMouseLeave={(e) => { e.currentTarget.style.borderColor=C.border; e.currentTarget.style.color=C.slate; }}>
-                {p.label}
-              </button>
-            ))}
+          {/* Left: quick booking card */}
+          <div className="hero-quick-form fade-up" style={{
+            background:C.white, borderRadius:20, padding:28,
+            boxShadow:"0 12px 48px rgba(89,154,215,0.18)", border:`1px solid ${C.border}`,
+          }}>
+            <h3 style={{ fontSize:17, fontWeight:800, color:C.charcoal, marginBottom:4 }}>احجز مكالمة مجانية الآن</h3>
+            <p style={{ fontSize:12.5, color:C.gray, marginBottom:18, lineHeight:1.6 }}>خلي بياناتك جاهزة وكمّل اختيار الميعاد تحت 👇</p>
+
+            <div style={{ marginBottom:12 }}>
+              <label style={{ fontSize:12.5, fontWeight:700, color:C.charcoal, display:"block", marginBottom:5 }}>الاسم بالكامل</label>
+              <input type="text" placeholder="محمد أحمد" value={formData.name}
+                onChange={(e) => setFormData((f) => ({ ...f, name:e.target.value }))}
+                style={{ ...inputStyle, padding:"10px 14px", fontSize:14 }} />
+            </div>
+            <div style={{ marginBottom:12 }}>
+              <label style={{ fontSize:12.5, fontWeight:700, color:C.charcoal, display:"block", marginBottom:5 }}>رقم الموبايل</label>
+              <input type="tel" placeholder="01XXXXXXXXX" value={formData.phone}
+                onChange={(e) => setFormData((f) => ({ ...f, phone:e.target.value }))}
+                style={{ ...inputStyle, padding:"10px 14px", fontSize:14, direction:"ltr" }} />
+            </div>
+            <div style={{ marginBottom:12 }}>
+              <label style={{ fontSize:12.5, fontWeight:700, color:C.charcoal, display:"block", marginBottom:5 }}>التخصص المطلوب</label>
+              <select value={formData.specialty}
+                onChange={(e) => setFormData((f) => ({ ...f, specialty:e.target.value }))}
+                style={{ ...inputStyle, padding:"10px 14px", fontSize:14, cursor:"pointer", color: formData.specialty ? C.charcoal : C.gray }}>
+                <option value="">اختر التخصص...</option>
+                {SERVICES.map((s) => <option key={s.name} value={s.name}>{s.icon} {s.name}</option>)}
+              </select>
+            </div>
+            <div style={{ marginBottom:18 }}>
+              <label style={{ fontSize:12.5, fontWeight:700, color:C.charcoal, display:"block", marginBottom:5 }}>
+                اسم الشركة <span style={{ fontWeight:400, color:C.gray }}>(اختياري)</span>
+              </label>
+              <input type="text" placeholder="لو عندك حساب شامل" value={formData.companyName}
+                onChange={(e) => setFormData((f) => ({ ...f, companyName:e.target.value }))}
+                style={{ ...inputStyle, padding:"10px 14px", fontSize:14 }} />
+            </div>
+
+            <button
+              onClick={() => formRef.current?.scrollIntoView({ behavior:"smooth", block:"center" })}
+              style={{ ...btnPrimary, width:"100%", padding:"13px", fontSize:14.5, borderRadius:12 }}>
+              اختار الميعاد المناسب ⬇
+            </button>
           </div>
         </div>
       </section>
