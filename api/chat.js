@@ -79,11 +79,26 @@ export default async function handler(req, res) {
   };
 
   // ── Tool: make_booking ────────────────────────────────────────────────────
-  const makeBooking = async ({ name, phone, specialty, date, time, notes, companyName }) => {
+  const makeBooking = async ({ name, phone, specialty, date, time, notes, companyName, confirmed }) => {
     const normalizedTime = normalizeTime(time);
     if (!isWorkingDay(date)) return { success: false, error: "يوم غير صحيح" };
     if (!TIME_SLOTS.includes(normalizedTime)) return { success: false, error: `وقت غير صحيح "${time}" → "${normalizedTime}" — الأوقات المتاحة: ${TIME_SLOTS.join(", ")}` };
     time = normalizedTime;
+
+    const cleanPhone = String(phone || "").replace(/[^\d]/g, "");
+    if (!/^01[0125]\d{8}$/.test(cleanPhone)) {
+      return { success: false, error: `رقم الموبايل "${phone}" مش صحيح. لازم يكون رقم مصري ١١ رقم يبدأ بـ 010 أو 011 أو 012 أو 015. اسأل المريض يعيد الرقم تاني بوضوح.` };
+    }
+    phone = cleanPhone;
+
+    if (!confirmed) {
+      return {
+        success: false,
+        needs_confirmation: true,
+        error: "لازم تقرأ التفاصيل على المريض وتاخد تأكيد قبل ما تحجز",
+        details_to_confirm: { name, phone, specialty, date, time: normalizedTime, companyName: companyName || null },
+      };
+    }
 
     if (REDIS_URL && REDIS_TOKEN) {
       const [countRes, slotRes] = await redisCmd([
@@ -179,8 +194,10 @@ export default async function handler(req, res) {
 ٥. اسأل عن اسمه الكامل ورقم موبايله
 ٦. اسأل لو عنده حساب شامل كوربوريت (من خلال شركته) — لو أيوه، اسأل عن اسم الشركة (اختياري تماماً، متضغطش عليه لو مش عايز يجاوب)
 ٧. لو فيه ملاحظات على الحالة، اسأل عنها (اختياري)
-٨. استخدم make_booking لتأكيد الحجز
-٩. أكّدله الحجز بالتفاصيل الكاملة
+٨. **قبل ما تحجز نهائي**: اقرأ على المريض كل التفاصيل بوضوح — الاسم، رقم الموبايل رقم برقم (مثلاً: "٠١٢٣٤٥٦٧٨٩ صح كده؟")، التخصص، التاريخ، الوقت — واطلب تأكيد صريح ("تمام؟" / "الرقم صح؟"). رقم الموبايل تحديداً لازم يتقري رقم برقم عشان تتجنب أي خطأ
+٩. لو المريض أكّد، استخدم make_booking بنفس البيانات مع confirmed:true. لو قال إن حاجة غلط، صححها واقرأ التفاصيل تاني قبل ما تأكد
+١٠. لو استخدمت make_booking وطلب منك تأكيد (needs_confirmation)، ارجع اقرأ التفاصيل زي فوق واستنى تأكيد المريض قبل ما تنادي الأداة تاني بـ confirmed:true
+١١. بعد نجاح الحجز، أكّدله التفاصيل الكاملة تاني
 
 📌 قواعد مهمة:
 - لو المريض اختار يوم جمعة أو سبت، قوله إنه يوم عطلة وساعده يختار يوم تاني
@@ -211,7 +228,7 @@ export default async function handler(req, res) {
     },
     {
       name: "make_booking",
-      description: "احجز موعد مكالمة للمريض. استخدمه بس بعد ما تجمع كل البيانات: الاسم والموبايل والتخصص والتاريخ والوقت.",
+      description: "احجز موعد مكالمة للمريض. أول مرة تستخدمه سيب confirmed فاضي/false — هيرجعلك التفاصيل عشان تقرأها على المريض وتتأكد منها. لما المريض يأكّد، نادي الأداة تاني بنفس البيانات مع confirmed:true عشان يتم الحجز فعلياً.",
       input_schema: {
         type: "object",
         properties: {
@@ -222,6 +239,7 @@ export default async function handler(req, res) {
           time:      { type: "string", description: "الوقت بصيغة 24h مثل 13:00 أو 14:30" },
           notes:     { type: "string", description: "ملاحظات إضافية عن الحالة (اختياري)" },
           companyName: { type: "string", description: "اسم الشركة لو المريض عنده حساب شامل كوربوريت (اختياري)" },
+          confirmed: { type: "boolean", description: "خليه false في أول استدعاء عشان تاخد تأكيد المريض على التفاصيل، وtrue بس بعد ما المريض يأكّد صراحة إن التفاصيل صح" },
         },
         required: ["name", "phone", "specialty", "date", "time"],
       },

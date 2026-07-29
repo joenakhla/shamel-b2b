@@ -101,10 +101,15 @@ export default async function handler(req, res) {
   // ── POST: book a slot ──────────────────────────────────────────────────────
   if (req.method === "POST") {
     try {
-      const { date, time, name, phone, specialty, notes, companyName } = req.body || {};
+      let { date, time, name, phone, specialty, notes, companyName } = req.body || {};
 
       if (!date || !time || !name || !phone || !specialty)
         return res.status(400).json({ error: "missing_fields", message: "كل الحقول مطلوبة" });
+
+      const cleanPhone = String(phone || "").replace(/[^\d]/g, "");
+      if (!/^01[0125]\d{8}$/.test(cleanPhone))
+        return res.status(400).json({ error: "invalid_phone", message: "رقم الموبايل مش صحيح. لازم يكون رقم مصري ١١ رقم يبدأ بـ 010 أو 011 أو 012 أو 015." });
+      phone = cleanPhone;
 
       const requestedDate = new Date(date + "T12:00:00");
       if (requestedDate.getDay() > 4)
